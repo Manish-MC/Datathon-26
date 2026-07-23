@@ -20,19 +20,22 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = async (loginId, password) => {
+  const login = async (loginId, password, isAdmin = false) => {
     try {
-      const response = await api.login({
-        login_id: loginId,
-        password: password
-      });
+      let response;
+      if (isAdmin) {
+        response = await api.adminLogin({ login_id: loginId, password: password });
+      } else {
+        response = await api.login({ login_id: loginId, password: password });
+      }
       
       const userData = {
         login_id: response.login_id,
         employee_name: response.employee_name,
         rank: response.rank,
         permissions: response.permissions,
-        hierarchy: response.hierarchy
+        hierarchy: response.hierarchy,
+        role: response.role
       };
       
       setUser(userData);
@@ -59,17 +62,8 @@ export const AuthProvider = ({ children }) => {
   const hasPermission = (action) => {
     if (!user) return false;
     
-    // Check based on hierarchy rules defined in backend for MVP
-    const hierarchy_req = {
-        "register_fir": 7, 
-        "approve_alert_action": 6, 
-        "dismiss_alert": 6
-    };
-    
-    if (hierarchy_req[action] !== undefined) {
-      return user.hierarchy <= hierarchy_req[action];
-    }
-    
+    // Check strictly against the capabilities aggregated by the backend.
+    // The backend's permissions.py is the single source of truth.
     return user.permissions?.includes(action) || false;
   };
 

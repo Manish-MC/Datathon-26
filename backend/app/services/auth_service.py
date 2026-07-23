@@ -6,7 +6,7 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
 from app.db import get_db
-from app.models.schema import Employee, Rank
+from app.models.schema import Employee, Rank, AdminUser
 from app.permissions import get_permissions_for_rank
 
 # For MVP, a simple secret key
@@ -38,6 +38,9 @@ def get_current_employee(token: str = Depends(oauth2_scheme), db: Session = Depe
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        if payload.get("role") != "officer":
+            raise credentials_exception
+            
         sub = payload.get("sub")
         if sub is None:
             raise credentials_exception
@@ -47,7 +50,7 @@ def get_current_employee(token: str = Depends(oauth2_scheme), db: Session = Depe
         raise credentials_exception
         
     employee = db.query(Employee).filter(Employee.EmployeeID == employee_id).first()
-    if employee is None:
+    if employee is None or not employee.Active:
         raise credentials_exception
         
     if employee.SessionVersion != session_version:
@@ -55,6 +58,30 @@ def get_current_employee(token: str = Depends(oauth2_scheme), db: Session = Depe
         raise credentials_exception
         
     return employee
+
+def get_current_admin(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate admin credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        if payload.get("role") != "admin":
+            raise credentials_exception
+            
+        sub = payload.get("sub")
+        if sub is None:
+            raise credentials_exception
+        admin_id = int(sub)
+    except (jwt.PyJWTError, ValueError, TypeError):
+        raise credentials_exception
+        
+    admin_user = db.query(AdminUser).filter(AdminUser.AdminID == admin_id).first()
+    if admin_user is None:
+        raise credentials_exception
+        
+    return admin_user
 
 class RequirePermission:
     def __init__(self, required_permission: str):

@@ -8,9 +8,11 @@ import {
   LineChart, Line, CartesianGrid
 } from 'recharts';
 import { api } from '../api/client';
+import { useAuth } from '../context/AuthContext';
 
 export default function Dashboard({ health }) {
   const navigate = useNavigate();
+  const { user, hasPermission } = useAuth();
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get('q');
 
@@ -22,6 +24,7 @@ export default function Dashboard({ health }) {
   // Filters
   const [stationId, setStationId] = useState('');
   const [categoryId, setCategoryId] = useState('');
+  const isStationLimited = !hasPermission('monitor_stations');
 
   useEffect(() => {
     async function loadData() {
@@ -32,13 +35,17 @@ export default function Dashboard({ health }) {
         setStats(statsData);
 
         if (searchQuery) {
-          const searchData = await api.searchCases(searchQuery);
+          const searchData = isStationLimited ? 
+            await api.getStationRecords(searchQuery) : 
+            await api.searchCases(searchQuery);
           setCases(searchData);
         } else {
-          const casesData = await api.getCases({
-            station_id: stationId,
-            category_id: categoryId
-          });
+          const casesData = isStationLimited ? 
+            await api.getStationRecords() :
+            await api.getCases({
+              station_id: stationId,
+              category_id: categoryId
+            });
           setCases(casesData);
         }
       } catch (err) {
@@ -62,19 +69,21 @@ export default function Dashboard({ health }) {
           </p>
         </div>
         <div className="flex space-x-2">
-          <select
-            value={stationId}
-            onChange={(e) => setStationId(e.target.value)}
-            className="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-2"
-          >
-            <option value="">All Stations</option>
-            <option value="1">Koramangala</option>
-            <option value="2">Indiranagar</option>
-            <option value="3">HSR Layout</option>
-            <option value="4">Whitefield</option>
-            <option value="5">Cubbon Park</option>
-            <option value="6">Jayanagar</option>
-          </select>
+          {!isStationLimited && (
+            <select
+              value={stationId}
+              onChange={(e) => setStationId(e.target.value)}
+              className="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-2"
+            >
+              <option value="">All Stations</option>
+              <option value="1">Koramangala</option>
+              <option value="2">Indiranagar</option>
+              <option value="3">HSR Layout</option>
+              <option value="4">Whitefield</option>
+              <option value="5">Cubbon Park</option>
+              <option value="6">Jayanagar</option>
+            </select>
+          )}
 
           <select
             value={categoryId}

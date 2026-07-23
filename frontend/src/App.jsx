@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { 
   Shield, Activity, MapPin, AlertTriangle, Search, Layers, 
-  Database, Calendar, RefreshCcw, Loader2, Plus, CheckCircle, Bell, User
+  Database, Calendar, RefreshCcw, Loader2, Plus, CheckCircle, Bell, User, Camera, FileText, CheckSquare, Users
 } from 'lucide-react';
 import NewFIRModal from './components/NewFIRModal';
 import Dashboard from './pages/Dashboard';
@@ -10,11 +10,15 @@ import CaseDetail from './pages/CaseDetail';
 import MapPage from './pages/MapPage';
 import Alerts from './pages/Alerts';
 import CaseSimilarity from './pages/CaseSimilarity';
-import { api } from './api/client';
+import SubmitEvidence from './pages/SubmitEvidence';
+import VerifyEvidence from './pages/VerifyEvidence';
+import StationTeam from './pages/StationTeam';
+import { api, API_BASE_URL } from './api/client';
 import { usePolling } from './hooks/usePolling';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import ProfilePage from './pages/ProfilePage';
+import AdminDashboard from './pages/AdminDashboard';
 
 const fetchHealth = () => api.getHealth();
 const fetchOpenAlerts = () => api.getAlerts("open");
@@ -25,12 +29,41 @@ function Layout({ health, loading, error }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [resetting, setResetting] = useState(false);
   const { user, logout, hasPermission } = useAuth();
+  const isActive = (path) => location.pathname === path;
 
   const { data: openAlerts, mutate: mutateAlerts } = usePolling("alerts_open", fetchOpenAlerts, 30000);
   const openAlertCount = openAlerts ? openAlerts.length : 0;
 
+  const { data: notifications, mutate: mutateNotifications } = usePolling("notifications", () => api.getNotifications(), 20000);
+  const unreadCount = notifications ? notifications.filter(n => !n.IsRead).length : 0;
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  const { data: pendingEvidence } = usePolling("pending_evidence", () => hasPermission('verify_evidence') ? api.getPendingEvidence() : null, 30000);
+  const pendingEvidenceCount = pendingEvidence ? pendingEvidence.length : 0;
+
+  const [profile, setProfile] = useState(null);
+  useEffect(() => {
+    if (user?.role !== 'admin') {
+      api.getProfile().then(setProfile).catch(() => {});
+    }
+  }, [user]);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [toast, setToast] = useState(null); // { title, message, type }
+
+  const handleMarkAsRead = async (id) => {
+    try {
+      await api.markAsRead(id);
+      mutateNotifications();
+    } catch(err) {}
+  };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await api.markAllAsRead();
+      mutateNotifications();
+    } catch(err) {}
+  };
 
   const showToast = (title, message, type = 'success') => {
     setToast({ title, message, type });
@@ -93,30 +126,69 @@ function Layout({ health, loading, error }) {
           
           {/* Nav Items */}
           <nav className="p-4 space-y-1.5">
-            <button onClick={() => navigate('/')} className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${location.pathname === '/' ? 'bg-blue-600/15 border-l-2 border-blue-500 text-blue-400 font-medium' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200 border-l-2 border-transparent'}`}>
-              <Activity className="w-4 h-4" />
-              <span>Executive Dashboard</span>
-            </button>
-            <button onClick={() => navigate('/map')} className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${location.pathname === '/map' ? 'bg-blue-600/15 border-l-2 border-blue-500 text-blue-400 font-medium' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200 border-l-2 border-transparent'}`}>
-              <MapPin className="w-4 h-4" />
-              <span>Spatial Analysis Map</span>
-            </button>
-            <button onClick={() => navigate('/similarity')} className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${location.pathname === '/similarity' ? 'bg-blue-600/15 border-l-2 border-blue-500 text-blue-400 font-medium' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200 border-l-2 border-transparent'}`}>
-              <Layers className="w-4 h-4" />
-              <span>Case Similarity Match</span>
-            </button>
-            {(hasPermission("approve_alert_action") || hasPermission("dismiss_alert")) && (
-              <button onClick={() => navigate('/alerts')} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-all duration-200 group ${location.pathname === '/alerts' ? 'bg-blue-600/15 border-l-2 border-blue-500 text-blue-400 font-medium' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200 border-l-2 border-transparent'}`}>
-                <div className="flex items-center space-x-3">
-                  <AlertTriangle className={`w-4 h-4 transition-colors ${location.pathname === '/alerts' ? 'text-blue-400' : 'group-hover:text-amber-400'}`} />
-                  <span>Explainable Alerts</span>
-                </div>
-                {openAlertCount > 0 && (
-                  <span className="bg-rose-500/20 text-rose-400 border border-rose-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                    {openAlertCount}
-                  </span>
-                )}
+            {user?.role === 'admin' ? (
+              <button onClick={() => navigate('/admin')} className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${location.pathname === '/admin' ? 'bg-rose-600/15 border-l-2 border-rose-500 text-rose-400 font-medium' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200 border-l-2 border-transparent'}`}>
+                <Shield className="w-4 h-4" />
+                <span>Admin Dashboard</span>
               </button>
+            ) : (
+              <>
+
+
+                {hasPermission('upload_evidence') && (
+                  <button onClick={() => navigate('/evidence/submit')} className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${isActive('/evidence/submit') ? 'bg-blue-600/15 border-l-2 border-blue-500 text-blue-400 font-medium' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200 border-l-2 border-transparent'}`}>
+                    <Camera className="w-4 h-4" />
+                    <span>Submit Evidence</span>
+                  </button>
+                )}
+                
+                {hasPermission('verify_evidence') && (
+                  <button onClick={() => navigate('/evidence/verify')} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${isActive('/evidence/verify') ? 'bg-blue-600/15 border-l-2 border-blue-500 text-blue-400 font-medium' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200 border-l-2 border-transparent'}`}>
+                    <div className="flex items-center space-x-3">
+                      <CheckSquare className="w-4 h-4" />
+                      <span>Verify Evidence</span>
+                    </div>
+                    {pendingEvidenceCount > 0 && (
+                      <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                        {pendingEvidenceCount}
+                      </span>
+                    )}
+                  </button>
+                )}
+
+                {hasPermission('manage_station_diary') && (
+                  <button onClick={() => navigate('/station/team')} className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${isActive('/station/team') ? 'bg-blue-600/15 border-l-2 border-blue-500 text-blue-400 font-medium' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200 border-l-2 border-transparent'}`}>
+                    <Users className="w-4 h-4" />
+                    <span>Station Team</span>
+                  </button>
+                )}
+
+                <button onClick={() => navigate('/')} className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${location.pathname === '/' ? 'bg-blue-600/15 border-l-2 border-blue-500 text-blue-400 font-medium' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200 border-l-2 border-transparent'}`}>
+                  <Activity className="w-4 h-4" />
+                  <span>Executive Dashboard</span>
+                </button>
+                <button onClick={() => navigate('/map')} className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${location.pathname === '/map' ? 'bg-blue-600/15 border-l-2 border-blue-500 text-blue-400 font-medium' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200 border-l-2 border-transparent'}`}>
+                  <MapPin className="w-4 h-4" />
+                  <span>Spatial Analysis Map</span>
+                </button>
+                <button onClick={() => navigate('/similarity')} className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${location.pathname === '/similarity' ? 'bg-blue-600/15 border-l-2 border-blue-500 text-blue-400 font-medium' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200 border-l-2 border-transparent'}`}>
+                  <Layers className="w-4 h-4" />
+                  <span>Case Similarity Match</span>
+                </button>
+                {(hasPermission("approve_alert_action") || hasPermission("dismiss_alert")) && (
+                  <button onClick={() => navigate('/alerts')} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-all duration-200 group ${location.pathname === '/alerts' ? 'bg-blue-600/15 border-l-2 border-blue-500 text-blue-400 font-medium' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200 border-l-2 border-transparent'}`}>
+                    <div className="flex items-center space-x-3">
+                      <AlertTriangle className={`w-4 h-4 transition-colors ${location.pathname === '/alerts' ? 'text-blue-400' : 'group-hover:text-amber-400'}`} />
+                      <span>Explainable Alerts</span>
+                    </div>
+                    {openAlertCount > 0 && (
+                      <span className="bg-rose-500/20 text-rose-400 border border-rose-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                        {openAlertCount}
+                      </span>
+                    )}
+                  </button>
+                )}
+              </>
             )}
           </nav>
         </div>
@@ -179,12 +251,72 @@ function Layout({ health, loading, error }) {
           </form>
 
           <div className="flex items-center space-x-4">
+            
+            {/* Notifications */}
+            {user?.role !== 'admin' && (
+              <div className="relative">
+                <button 
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="relative p-2 text-slate-400 hover:text-slate-200 transition-colors"
+                >
+                  <Bell className="w-5 h-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-0 right-0 w-4 h-4 bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border border-[#0a0f1d]">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+                
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-80 bg-[#111726] border border-slate-700 rounded-lg shadow-2xl z-50 overflow-hidden flex flex-col max-h-[28rem]">
+                    <div className="p-3 border-b border-slate-700 flex justify-between items-center bg-[#0a0f1d]">
+                      <h3 className="font-semibold text-slate-200 text-sm">Notifications</h3>
+                      <button onClick={handleMarkAllAsRead} className="text-[10px] text-blue-400 hover:text-blue-300">Mark all as read</button>
+                    </div>
+                    <div className="overflow-y-auto flex-1">
+                      {notifications && notifications.length > 0 ? (
+                        notifications.map(n => (
+                          <div 
+                            key={n.NotificationID} 
+                            onClick={() => {
+                              if (!n.IsRead) handleMarkAsRead(n.NotificationID);
+                              if (n.RelatedID) {
+                                setShowNotifications(false);
+                                if (n.Type === 'alert') navigate('/alerts');
+                                else if (n.Type === 'new_fir') navigate(`/case/${n.RelatedID}`);
+                              }
+                            }}
+                            className={`p-3 border-b border-slate-800/50 cursor-pointer hover:bg-slate-800/50 transition-colors ${!n.IsRead ? 'bg-blue-900/10' : ''}`}
+                          >
+                            <div className="flex justify-between items-start mb-1">
+                              <span className="font-medium text-xs text-slate-200">{n.Title}</span>
+                              {!n.IsRead && <span className="w-2 h-2 rounded-full bg-blue-500 mt-1 shrink-0"></span>}
+                            </div>
+                            <p className="text-[11px] text-slate-400 line-clamp-2">{n.Message}</p>
+                            <p className="text-[9px] text-slate-500 mt-2">{new Date(n.CreatedAt).toLocaleString()}</p>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="p-6 text-center text-slate-500 text-xs">No notifications</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             <button
               onClick={() => navigate('/profile')}
-              className="bg-slate-900 hover:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-800 flex items-center space-x-2 transition-colors cursor-pointer"
+              className="bg-slate-900 hover:bg-slate-800 px-3 py-1.5 rounded-full border border-slate-800 flex items-center space-x-2 transition-colors cursor-pointer"
             >
-              <User className="w-3.5 h-3.5 text-blue-400" />
-              <span className="text-xs text-slate-300">Logged in as: {user?.login_id} — {user?.rank}</span>
+              <div className="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center shrink-0 border border-slate-700 bg-blue-900">
+                {profile?.PhotoURL ? (
+                  <img src={`${API_BASE_URL}${profile.PhotoURL}`} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-3.5 h-3.5 text-blue-400" />
+                )}
+              </div>
+              <span className="text-xs text-slate-300 pr-2">Logged in as: {user?.login_id} — {user?.role === 'admin' ? 'Admin' : user?.rank}</span>
             </button>
             
             <button
@@ -221,12 +353,25 @@ function Layout({ health, loading, error }) {
 
         {/* Inner Content Grid - Routed */}
         <Routes>
-          <Route path="/" element={<Dashboard health={health} />} />
-          <Route path="/case/:id" element={<CaseDetail />} />
-          <Route path="/map" element={<MapPage />} />
-          <Route path="/similarity" element={<CaseSimilarity />} />
-          <Route path="/alerts" element={<Alerts />} />
-          <Route path="/profile" element={<ProfilePage />} />
+          {user?.role === 'admin' ? (
+            <>
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="*" element={<Navigate to="/admin" replace />} />
+            </>
+          ) : (
+            <>
+              <Route path="/" element={<Dashboard health={health} />} />
+              <Route path="/case/:id" element={<CaseDetail />} />
+              <Route path="/map" element={<MapPage />} />
+              <Route path="/similarity" element={<CaseSimilarity />} />
+              <Route path="/alerts" element={<Alerts />} />
+              <Route path="/evidence/submit" element={<SubmitEvidence />} />
+              <Route path="/evidence/verify" element={<VerifyEvidence />} />
+              <Route path="/station/team" element={<StationTeam />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </>
+          )}
         </Routes>
       </main>
 

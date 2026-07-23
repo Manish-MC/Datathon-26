@@ -35,6 +35,40 @@ class CaseSummaryBase(BaseModel):
     GeneratedAt: datetime
     model_config = ConfigDict(from_attributes=True)
 
+class EvidenceLinkResponse(BaseModel):
+    EvidenceLinkID: int
+    PersonType: str
+    AccusedMasterID: Optional[int] = None
+    VictimMasterID: Optional[int] = None
+    UnlistedPersonNote: Optional[str] = None
+    model_config = ConfigDict(from_attributes=True)
+
+class EvidenceResponse(BaseModel):
+    EvidenceID: int
+    UploadedByEmployeeID: int
+    FileURL: str
+    FileType: str
+    OriginalFileName: str
+    FileSizeBytes: int
+    LocationLat: Optional[float] = None
+    LocationLng: Optional[float] = None
+    LocationText: Optional[str] = None
+    Description: Optional[str] = None
+    UploadedAt: datetime
+    
+    VerificationStatus: str = "pending"
+    VerifiedByEmployeeID: Optional[int] = None
+    VerifiedByRankName: Optional[str] = None
+    VerifiedAt: Optional[datetime] = None
+    
+    links: List[EvidenceLinkResponse] = []
+    
+    # Optional fields that can be included by custom queries
+    uploader_name: Optional[str] = None
+    uploader_rank: Optional[str] = None
+    
+    model_config = ConfigDict(from_attributes=True)
+
 class UnitBase(BaseModel):
     UnitID: int
     UnitName: str
@@ -89,6 +123,7 @@ class CaseMasterDetail(CaseMasterList):
     accused: List[AccusedBase] = []
     arrests: List[ArrestBase] = []
     summary: Optional[CaseSummaryBase] = None
+    evidence: List[EvidenceResponse] = []
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -140,6 +175,15 @@ class ProfileResponse(BaseModel):
     PhoneNumber: Optional[str] = None
     Email: Optional[str] = None
     RankName: str
+    PhotoURL: Optional[str] = None
+    model_config = ConfigDict(from_attributes=True)
+
+class StationTeamMember(BaseModel):
+    EmployeeID: int
+    LoginID: str
+    EmployeeName: str
+    RankName: str
+    PhotoURL: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
 
 class ProfileUpdate(BaseModel):
@@ -147,4 +191,16 @@ class ProfileUpdate(BaseModel):
     PhoneNumber: Optional[str] = None
     Email: Optional[str] = None
 
+class NotificationResponse(BaseModel):
+    NotificationID: int
+    Title: str
+    Message: str
+    Type: str
+    RelatedID: Optional[int] = None
+    CreatedAt: datetime
+    IsRead: bool
+    
+    model_config = ConfigDict(from_attributes=True)
 
+class UnreadCountResponse(BaseModel):
+    count: int

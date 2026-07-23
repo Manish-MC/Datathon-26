@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from app.db import get_db
-from app.models.schema import Employee
+from app.models.schema import Employee, AdminUser
 from app.services.auth_service import verify_password, create_access_token
 from app.permissions import get_permissions_for_rank
 
@@ -20,6 +20,9 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
     if not employee:
         raise HTTPException(status_code=401, detail="Invalid login credentials")
         
+    if not employee.Active:
+        raise HTTPException(status_code=403, detail="Account is deactivated")
+        
     if not verify_password(request.password, employee.PasswordHash):
         raise HTTPException(status_code=401, detail="Invalid login credentials")
         
@@ -28,7 +31,8 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
             "sub": employee.EmployeeID, 
             "login_id": employee.LoginID, 
             "rank": employee.rank.RankName,
-            "session_version": employee.SessionVersion
+            "session_version": employee.SessionVersion,
+            "role": "officer"
         }
     )
     
@@ -39,5 +43,31 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
         "login_id": employee.LoginID,
         "rank": employee.rank.RankName,
         "permissions": get_permissions_for_rank(employee.rank.RankName),
-        "hierarchy": employee.rank.Hierarchy
+        "hierarchy": employee.rank.Hierarchy,
+        "role": "officer"
+    }
+
+@router.post("/admin/login")
+def admin_login(request: LoginRequest, db: Session = Depends(get_db)):
+    admin_user = db.query(AdminUser).filter(AdminUser.LoginID == request.login_id).first()
+    if not admin_user:
+        raise HTTPException(status_code=401, detail="Invalid login credentials")
+        
+    if not verify_password(request.password, admin_user.PasswordHash):
+        raise HTTPException(status_code=401, detail="Invalid login credentials")
+        
+    access_token = create_access_token(
+        data={
+            "sub": admin_user.AdminID, 
+            "login_id": admin_user.LoginID, 
+            "role": "admin"
+        }
+    )
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "employee_name": admin_user.FullName,
+        "login_id": admin_user.LoginID,
+        "role": "admin"
     }

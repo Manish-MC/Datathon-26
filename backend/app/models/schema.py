@@ -11,6 +11,15 @@ class Rank(Base):
     
     employees = relationship("Employee", back_populates="rank")
 
+class AdminUser(Base):
+    __tablename__ = "AdminUser"
+    
+    AdminID = Column(Integer, primary_key=True, index=True)
+    LoginID = Column(String, nullable=False, unique=True, index=True)
+    PasswordHash = Column(String, nullable=False)
+    FullName = Column(String, nullable=True)
+    CreatedAt = Column(DateTime, nullable=False)
+
 class Employee(Base):
     __tablename__ = "Employee"
     
@@ -22,6 +31,9 @@ class Employee(Base):
     Email = Column(String, nullable=True)
     SessionVersion = Column(Integer, default=1, nullable=False)
     RankID = Column(Integer, ForeignKey("Rank.RankID"), nullable=False)
+    Active = Column(Boolean, default=True, nullable=False)
+    PhotoURL = Column(String, nullable=True)
+    UnitID = Column(Integer, ForeignKey("Unit.UnitID"), nullable=True)
     
     rank = relationship("Rank", back_populates="employees")
     pending_otp = relationship("PendingOTP", back_populates="employee", uselist=False, cascade="all, delete-orphan")
@@ -91,6 +103,7 @@ class CaseMaster(Base):
     accused = relationship("Accused", back_populates="case", cascade="all, delete-orphan")
     arrests = relationship("ArrestSurrender", back_populates="case", cascade="all, delete-orphan")
     summary = relationship("CaseSummary", back_populates="case", uselist=False, cascade="all, delete-orphan")
+    evidence = relationship("Evidence", back_populates="case", cascade="all, delete-orphan")
 
 class CaseSummary(Base):
     __tablename__ = "CaseSummary"
@@ -157,3 +170,63 @@ class Alert(Base):
     Status = Column(String, nullable=False, default="open") # "open" | "reviewed" | "dismissed"
     ReviewedBy = Column(String, nullable=True)
     ReviewedAt = Column(DateTime, nullable=True)
+
+class Notification(Base):
+    __tablename__ = "Notification"
+    
+    NotificationID = Column(Integer, primary_key=True, index=True)
+    RecipientEmployeeID = Column(Integer, ForeignKey("Employee.EmployeeID"), nullable=True, index=True)
+    RecipientRankThreshold = Column(Integer, nullable=True)
+    RecipientUnitID = Column(Integer, ForeignKey("Unit.UnitID"), nullable=True)
+    Title = Column(String, nullable=False)
+    Message = Column(String, nullable=False)
+    Type = Column(String, nullable=False) # "alert" | "new_fir" | "account"
+    RelatedID = Column(Integer, nullable=True)
+    CreatedAt = Column(DateTime, nullable=False)
+    IsRead = Column(Boolean, default=False, nullable=False)
+
+class Evidence(Base):
+    __tablename__ = "Evidence"
+    
+    EvidenceID = Column(Integer, primary_key=True, index=True)
+    CaseMasterID = Column(Integer, ForeignKey("CaseMaster.CaseMasterID"), nullable=False, index=True)
+    UploadedByEmployeeID = Column(Integer, ForeignKey("Employee.EmployeeID"), nullable=False)
+    FileURL = Column(String, nullable=False)
+    FileType = Column(String, nullable=False)
+    OriginalFileName = Column(String, nullable=False)
+    FileSizeBytes = Column(Integer, nullable=False)
+    LocationLat = Column(Float, nullable=True)
+    LocationLng = Column(Float, nullable=True)
+    LocationText = Column(String, nullable=True)
+    Description = Column(String, nullable=True)
+    UploadedAt = Column(DateTime, nullable=False)
+    
+    VerificationStatus = Column(String, default="pending", nullable=False)
+    VerifiedByEmployeeID = Column(Integer, ForeignKey("Employee.EmployeeID"), nullable=True)
+    VerifiedByRankName = Column(String, nullable=True)
+    VerifiedAt = Column(DateTime, nullable=True)
+    
+    case = relationship("CaseMaster", back_populates="evidence")
+    uploaded_by = relationship("Employee", foreign_keys=[UploadedByEmployeeID])
+    verified_by = relationship("Employee", foreign_keys=[VerifiedByEmployeeID])
+    links = relationship("EvidenceLink", back_populates="evidence", cascade="all, delete-orphan")
+
+    @property
+    def uploader_name(self) -> str:
+        return self.uploaded_by.EmployeeName if self.uploaded_by else "Unknown"
+
+    @property
+    def uploader_rank(self) -> str:
+        return self.uploaded_by.rank.RankName if self.uploaded_by and self.uploaded_by.rank else "Unknown"
+
+class EvidenceLink(Base):
+    __tablename__ = "EvidenceLink"
+    
+    EvidenceLinkID = Column(Integer, primary_key=True, index=True)
+    EvidenceID = Column(Integer, ForeignKey("Evidence.EvidenceID"), nullable=False, index=True)
+    PersonType = Column(String, nullable=False) # "suspect", "victim", "unlisted"
+    AccusedMasterID = Column(Integer, ForeignKey("Accused.AccusedMasterID"), nullable=True)
+    VictimMasterID = Column(Integer, ForeignKey("Victim.VictimMasterID"), nullable=True)
+    UnlistedPersonNote = Column(String, nullable=True)
+    
+    evidence = relationship("Evidence", back_populates="links")

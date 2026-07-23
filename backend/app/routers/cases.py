@@ -60,6 +60,18 @@ def create_case(case_in: schemas.CaseCreate, db: Session = Depends(get_db), curr
         db.add(new_case)
         db.commit()
         db.refresh(new_case)
+        
+        # Notify all officers at the station
+        from app.services.notification_service import notify_station_rank_and_above
+        notify_station_rank_and_above(
+            db=db,
+            unit_id=case_in.PoliceStationID,
+            min_hierarchy_level=100, # All ranks
+            title="New FIR Registered",
+            message=f"A new case (Crime No: {case_in.CrimeNo}) has been filed at your station.",
+            notification_type="new_fir",
+            related_id=new_case.CaseMasterID
+        )
 
         # Trigger Alerts
         from app.services.alert_engine import generate_cluster_alerts, generate_hotspot_alerts

@@ -1,0 +1,179 @@
+{
+  "PC_10452_2015": {
+    "permissions": [
+      "update_patrol_status",
+      "upload_evidence",
+      "view_assigned_firs"
+    ],
+    "endpoints": {
+      "me": 404,
+      "dashboard": 200,
+      "evidence_pending": 403,
+      "station_team": 200
+    }
+  },
+  "HC_10218_2011": {
+    "permissions": [
+      "manage_seized_property",
+      "manage_station_diary",
+      "assist_fir",
+      "assign_minor_tasks",
+      "update_patrol_status",
+      "upload_evidence",
+      "update_property",
+      "verify_evidence",
+      "station_diary",
+      "view_assigned_firs",
+      "verify_patrol_reports"
+    ],
+    "endpoints": {
+      "me": 404,
+      "dashboard": 200,
+      "evidence_pending": 200,
+      "station_team": 200
+    }
+  },
+  "ASI_10084_2009": {
+    "permissions": [
+      "update_investigation",
+      "witness_statements",
+      "manage_seized_property",
+      "manage_station_diary",
+      "assist_fir",
+      "assign_minor_tasks",
+      "update_patrol_status",
+      "upload_evidence",
+      "update_property",
+      "verify_evidence",
+      "station_diary",
+      "view_assigned_firs",
+      "verify_patrol_reports"
+    ],
+    "endpoints": {
+      "me": 404,
+      "dashboard": 200,
+      "evidence_pending": 200,
+      "station_team": 200
+    }
+  },
+  "SI_10021_2007": {
+    "permissions": [
+      "update_investigation",
+      "witness_statements",
+      "manage_seized_property",
+      "manage_station_diary",
+      "assist_fir",
+      "assign_minor_tasks",
+      "assign_investigation",
+      "update_patrol_status",
+      "upload_evidence",
+      "update_property",
+      "register_fir",
+      "arrest_records",
+      "case_diary",
+      "verify_evidence",
+      "station_diary",
+      "view_assigned_firs",
+      "verify_patrol_reports"
+    ],
+    "endpoints": {
+      "me": 404,
+      "dashboard": 200,
+      "evidence_pending": 200,
+      "station_team": 200
+    }
+  },
+  "PI_0007_2003": {
+    "permissions": [
+      "update_property",
+      "upload_evidence",
+      "view_assigned_firs",
+      "verify_patrol_reports",
+      "assign_minor_tasks",
+      "station_admin",
+      "arrest_records",
+      "register_fir",
+      "station_diary",
+      "station_reports",
+      "manage_seized_property",
+      "manage_station_diary",
+      "assist_fir",
+      "assign_officers",
+      "approve_alert_action",
+      "dismiss_alert",
+      "case_diary",
+      "verify_evidence",
+      "witness_statements",
+      "assign_investigation",
+      "update_patrol_status",
+      "approve_fir",
+      "update_investigation"
+    ],
+    "endpoints": {
+      "me": 404,
+      "dashboard": 200,
+      "evidence_pending": 200,
+      "station_team": 200
+    }
+  },
+  "DGP_0001_1983": {
+    "permissions": [
+      "district_dashboard",
+      "regional_analytics",
+      "update_property",
+      "upload_evidence",
+      "view_assigned_firs",
+      "verify_patrol_reports",
+      "dept_wide_monitoring",
+      "monitor_stations",
+      "regional_monitoring",
+      "assign_minor_tasks",
+      "state_wide_access",
+      "approve_transfers",
+      "station_admin",
+      "arrest_records",
+      "district_reports",
+      "register_fir",
+      "station_diary",
+      "officer_management",
+      "station_reports",
+      "manage_seized_property",
+      "manage_station_diary",
+      "assist_fir",
+      "assign_officers",
+      "approve_alert_action",
+      "policy_reports",
+      "dismiss_alert",
+      "district_analytics",
+      "case_diary",
+      "verify_evidence",
+      "analytics",
+      "inter_district_coord",
+      "strategic_dashboards",
+      "witness_statements",
+      "crime_stats",
+      "assign_investigation",
+      "admin_oversight",
+      "approvals",
+      "update_patrol_status",
+      "approve_fir",
+      "review_investigations",
+      "update_investigation"
+    ],
+    "endpoints": {
+      "me": 404,
+      "dashboard": 200,
+      "evidence_pending": 200,
+      "station_team": 200
+    }
+  },
+  "ADMIN_001": {
+    "permissions": [],
+    "endpoints": {
+      "me": 404,
+      "dashboard": 200,
+      "evidence_pending": 401,
+      "station_team": 401
+    }
+  }
+}

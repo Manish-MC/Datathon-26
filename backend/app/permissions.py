@@ -22,7 +22,12 @@ RANK_PERMISSIONS = {
     "Head Constable": [
         "station_diary",
         "assist_fir",
-        "update_property"
+        "update_property",
+        "verify_evidence",
+        "verify_patrol_reports",
+        "manage_station_diary",
+        "manage_seized_property",
+        "assign_minor_tasks"
     ],
     "Assistant Sub-Inspector": [
         "update_investigation",

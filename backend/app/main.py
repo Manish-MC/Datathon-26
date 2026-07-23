@@ -5,19 +5,20 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import text
+from fastapi.staticfiles import StaticFiles
 
 from app.db import engine, Base, get_db, SessionLocal
 from app.models.schema import (
     Unit, CaseCategory, CaseStatusMaster, CaseMaster,
     ComplainantDetails, Victim, Accused, ArrestSurrender,
-    Rank, Employee, PendingOTP
+    Rank, Employee, PendingOTP, AdminUser
 )
 from app.services.auth_service import get_password_hash
 from app.permissions import RANK_SEED_DATA
 
 app = FastAPI(title="AI-Powered Police Analytics Platform API", version="1.0.0")
 
-from app.routers import cases, dashboard, analytics, alerts, demo, auth, profile
+from app.routers import cases, dashboard, analytics, alerts, demo, auth, profile, admin, notifications, evidence, station
 app.include_router(cases.router)
 app.include_router(dashboard.router)
 app.include_router(analytics.router)
@@ -25,6 +26,16 @@ app.include_router(alerts.router)
 app.include_router(demo.router)
 app.include_router(auth.router)
 app.include_router(profile.router)
+app.include_router(admin.router)
+app.include_router(notifications.router)
+app.include_router(evidence.router)
+app.include_router(station.router)
+
+# Mount static files for uploads
+uploads_dir = os.path.join(os.path.dirname(__file__), "uploads")
+os.makedirs(os.path.join(uploads_dir, "profile_photos"), exist_ok=True)
+os.makedirs(os.path.join(uploads_dir, "evidence"), exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 # Enable CORS for frontend connection
 app.add_middleware(
     CORSMiddleware,
@@ -49,6 +60,18 @@ def seed_database():
     db = SessionLocal()
     try:
         # Seed Auth Data
+        if db.query(AdminUser).first() is None:
+            print("Seeding Admin User...")
+            hashed_admin_pwd = get_password_hash("ksp_admin_1709")
+            admin_user = AdminUser(
+                LoginID="ADMIN_001",
+                PasswordHash=hashed_admin_pwd,
+                FullName="System Administrator",
+                CreatedAt=datetime.now()
+            )
+            db.add(admin_user)
+            db.commit()
+
         if db.query(Rank).first() is None:
             print("Seeding Ranks and Employees...")
             hashed_pwd = get_password_hash("ksp_1709")
@@ -86,7 +109,8 @@ def seed_database():
                         EmployeeName=emp_name,
                         PhoneNumber=mock_phone,
                         Email=mock_email,
-                        RankID=rank_map[rank_name]
+                        RankID=rank_map[rank_name],
+                        UnitID=1  # Default to Koramangala
                     ))
             db.commit()
 

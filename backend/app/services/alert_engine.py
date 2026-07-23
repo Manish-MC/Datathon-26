@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.models.schema import CaseMaster, Alert
+from app.services.notification_service import notify_station_rank_and_above
 
 def _cluster_exists(db: Session, case_ids: list[int]) -> bool:
     """Check if an open similar_cluster alert already contains at least one of these cases."""
@@ -73,6 +74,19 @@ def generate_cluster_alerts(db: Session, threshold: float = 0.6, target_case_id:
                 db.refresh(alert)
                 new_alerts.append(alert)
                 
+                # Notify Inspector and above (hierarchy <= 6)
+                case = db.query(CaseMaster).filter(CaseMaster.CaseMasterID == cluster_ids[0]).first()
+                if case:
+                    notify_station_rank_and_above(
+                        db=db,
+                        unit_id=case.PoliceStationID,
+                        min_hierarchy_level=6,
+                        title="New Cluster Alert",
+                        message=reason,
+                        notification_type="alert",
+                        related_id=alert.AlertID
+                    )
+                
             processed_case_ids.update(cluster_ids)
             
     return new_alerts
@@ -122,5 +136,17 @@ def generate_hotspot_alerts(db: Session, threshold_count: int = 5, target_lat: f
                 db.commit()
                 db.refresh(alert)
                 new_alerts.append(alert)
+                
+                # Notify Inspector and above (hierarchy <= 6)
+                if cases_in_bucket:
+                    notify_station_rank_and_above(
+                        db=db,
+                        unit_id=cases_in_bucket[0].PoliceStationID,
+                        min_hierarchy_level=6,
+                        title="New Hotspot Spike Alert",
+                        message=reason,
+                        notification_type="alert",
+                        related_id=alert.AlertID
+                    )
                 
     return new_alerts
