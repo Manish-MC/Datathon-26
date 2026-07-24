@@ -62,7 +62,7 @@ def create_case(case_in: schemas.CaseCreate, db: Session = Depends(get_db), curr
         db.refresh(new_case)
         
         # Notify all officers at the station
-        from app.services.notification_service import notify_station_rank_and_above
+        from app.services.notification_service import notify_station_rank_and_above, notify_station_below_rank
         notify_station_rank_and_above(
             db=db,
             unit_id=case_in.PoliceStationID,
@@ -72,6 +72,20 @@ def create_case(case_in: schemas.CaseCreate, db: Session = Depends(get_db), curr
             notification_type="new_fir",
             related_id=new_case.CaseMasterID
         )
+
+        if getattr(case_in, "BroadcastOnCreate", False):
+            # Check if user has permission
+            if "broadcast_urgent_alert" in current_employee.permissions:
+                msg = getattr(case_in, "BroadcastReason", None) or f"Immediate inspection required on Case {case_in.CrimeNo} — flagged by {current_employee.EmployeeName}"
+                notify_station_below_rank(
+                    db=db,
+                    unit_id=case_in.PoliceStationID,
+                    above_hierarchy_level=current_employee.rank.Hierarchy,
+                    title="Urgent Case Alert",
+                    message=msg,
+                    notification_type="urgent_case_alert",
+                    related_id=new_case.CaseMasterID
+                )
 
         # Trigger Alerts
         from app.services.alert_engine import generate_cluster_alerts, generate_hotspot_alerts
@@ -229,3 +243,58 @@ def get_similar_cases(case_id: int, limit: int = 5, db: Session = Depends(get_db
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to find similar cases: {str(e)}")
 
+@router.post("/{case_id}/broadcast-alert", response_model=dict)
+def broadcast_urgent_alert(case_id: int, body: schemas.BroadcastRequest, db: Session = Depends(get_db), current_employee: Employee = Depends(require_permission("broadcast_urgent_alert"))):
+    case = db.query(CaseMaster).filter(CaseMaster.CaseMasterID == case_id).first()
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+        
+    if case.PoliceStationID != current_employee.UnitID:
+        raise HTTPException(status_code=403, detail="Cannot broadcast alerts for a different station")
+        
+    custom_message = body.reason if body and body.reason else None
+    message = custom_message or f"Immediate inspection required on Case {case.CrimeNo} — flagged by {current_employee.EmployeeName}"
+    
+    from app.services.notification_service import notify_station_below_rank
+    notify_station_below_rank(
+        db=db,
+        unit_id=case.PoliceStationID,
+        above_hierarchy_level=current_employee.rank.Hierarchy,
+        title="Urgent Case Alert",
+        message=message,
+        notification_type="urgent_case_alert",
+        related_id=case_id
+    )
+    
+    return {"status": "success", "message": "Urgent alert broadcasted"}
+
+@router.get("/station/pending-approval", response_model=List[schemas.CaseMasterList])
+def list_pending_approval_cases(db: Session = Depends(get_db), current_employee: Employee = Depends(require_permission("approve_fir"))):
+    if not current_employee.UnitID:
+        raise HTTPException(status_code=400, detail="Employee not assigned to a station")
+        
+    cases = db.query(CaseMaster).filter(
+        CaseMaster.PoliceStationID == current_employee.UnitID,
+        CaseMaster.ApprovalStatus == 'pending'
+    ).order_by(desc(CaseMaster.CrimeRegisteredDate)).limit(50).all()
+    
+    return cases
+
+@router.post("/{case_id}/approve", response_model=schemas.CaseMasterList)
+def approve_case(case_id: int, db: Session = Depends(get_db), current_employee: Employee = Depends(require_permission("approve_fir"))):
+    case = db.query(CaseMaster).filter(CaseMaster.CaseMasterID == case_id).first()
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+        
+    if case.PoliceStationID != current_employee.UnitID:
+        raise HTTPException(status_code=403, detail="Not authorized to approve cases from another station")
+        
+    case.ApprovalStatus = "approved"
+    case.ApprovedByEmployeeID = current_employee.EmployeeID
+    case.ApprovedByRankName = current_employee.rank.RankName
+    case.ApprovedAt = datetime.now()
+    
+    db.commit()
+    db.refresh(case)
+    
+    return case

@@ -36,6 +36,16 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
         }
     )
     
+    # Calculate ZoneID if applicable
+    zone_id = None
+    if employee.DistrictID:
+        from app.models.schema import District, PoliceRange
+        emp_district = db.query(District).filter(District.DistrictID == employee.DistrictID).first()
+        if emp_district:
+            emp_range = db.query(PoliceRange).filter(PoliceRange.RangeID == emp_district.RangeID).first()
+            if emp_range:
+                zone_id = emp_range.ZoneID
+
     return {
         "access_token": access_token,
         "token_type": "bearer",
@@ -44,7 +54,9 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
         "rank": employee.rank.RankName,
         "permissions": get_permissions_for_rank(employee.rank.RankName),
         "hierarchy": employee.rank.Hierarchy,
-        "role": "officer"
+        "role": "officer",
+        "zone_id": zone_id,
+        "department_id": employee.DepartmentID
     }
 
 @router.post("/admin/login")

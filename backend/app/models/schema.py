@@ -7,9 +7,46 @@ class Rank(Base):
     
     RankID = Column(Integer, primary_key=True, index=True)
     RankName = Column(String, nullable=False, unique=True)
-    Hierarchy = Column(Integer, nullable=False) # Lower number = higher authority
+    Hierarchy = Column(Float, nullable=False) # Lower number = higher authority
     
     employees = relationship("Employee", back_populates="rank")
+
+class Department(Base):
+    __tablename__ = "Department"
+    
+    DepartmentID = Column(Integer, primary_key=True, index=True)
+    DepartmentName = Column(String, nullable=False, unique=True)
+    
+    case_categories = relationship("CaseCategory", back_populates="department")
+    employees = relationship("Employee", back_populates="department")
+
+class PoliceZone(Base):
+    __tablename__ = "PoliceZone"
+    
+    ZoneID = Column(Integer, primary_key=True, index=True)
+    ZoneName = Column(String, nullable=False, unique=True)
+    
+    ranges = relationship("PoliceRange", back_populates="zone")
+
+class PoliceRange(Base):
+    __tablename__ = "PoliceRange"
+    
+    RangeID = Column(Integer, primary_key=True, index=True)
+    RangeName = Column(String, nullable=False, unique=True)
+    ZoneID = Column(Integer, ForeignKey("PoliceZone.ZoneID"), nullable=True)
+    
+    zone = relationship("PoliceZone", back_populates="ranges")
+    districts = relationship("District", back_populates="range")
+
+class District(Base):
+    __tablename__ = "District"
+    
+    DistrictID = Column(Integer, primary_key=True, index=True)
+    DistrictName = Column(String, nullable=False, unique=True)
+    RangeID = Column(Integer, ForeignKey("PoliceRange.RangeID"), nullable=False)
+    
+    range = relationship("PoliceRange", back_populates="districts")
+    units = relationship("Unit", back_populates="district")
 
 class AdminUser(Base):
     __tablename__ = "AdminUser"
@@ -34,8 +71,11 @@ class Employee(Base):
     Active = Column(Boolean, default=True, nullable=False)
     PhotoURL = Column(String, nullable=True)
     UnitID = Column(Integer, ForeignKey("Unit.UnitID"), nullable=True)
+    DistrictID = Column(Integer, ForeignKey("District.DistrictID"), nullable=True, default=1)
+    DepartmentID = Column(Integer, ForeignKey("Department.DepartmentID"), nullable=True)
     
     rank = relationship("Rank", back_populates="employees")
+    department = relationship("Department", back_populates="employees")
     pending_otp = relationship("PendingOTP", back_populates="employee", uselist=False, cascade="all, delete-orphan")
 
 class PendingOTP(Base):
@@ -55,15 +95,19 @@ class Unit(Base):
     
     UnitID = Column(Integer, primary_key=True, index=True)
     UnitName = Column(String, nullable=False, unique=True)
+    DistrictID = Column(Integer, ForeignKey("District.DistrictID"), nullable=True, default=1)
     
     cases = relationship("CaseMaster", back_populates="police_station")
+    district = relationship("District", back_populates="units")
 
 class CaseCategory(Base):
     __tablename__ = "CaseCategory"
     
     CaseCategoryID = Column(Integer, primary_key=True, index=True)
     LookupValue = Column(String, nullable=False, unique=True)
+    DepartmentID = Column(Integer, ForeignKey("Department.DepartmentID"), nullable=True)
     
+    department = relationship("Department", back_populates="case_categories")
     cases = relationship("CaseMaster", back_populates="category")
 
 class CaseStatusMaster(Base):
@@ -93,6 +137,11 @@ class CaseMaster(Base):
     longitude = Column(Float, nullable=False)
     BriefFacts = Column(String, nullable=False)
     
+    ApprovalStatus = Column(String, default="pending", nullable=False)
+    ApprovedByEmployeeID = Column(Integer, ForeignKey("Employee.EmployeeID"), nullable=True)
+    ApprovedByRankName = Column(String, nullable=True)
+    ApprovedAt = Column(DateTime, nullable=True)
+    
     # Relationships
     police_station = relationship("Unit", back_populates="cases")
     category = relationship("CaseCategory", back_populates="cases")
@@ -104,6 +153,24 @@ class CaseMaster(Base):
     arrests = relationship("ArrestSurrender", back_populates="case", cascade="all, delete-orphan")
     summary = relationship("CaseSummary", back_populates="case", uselist=False, cascade="all, delete-orphan")
     evidence = relationship("Evidence", back_populates="case", cascade="all, delete-orphan")
+    department_flags = relationship("DepartmentCaseFlag", back_populates="case", cascade="all, delete-orphan")
+
+class DepartmentCaseFlag(Base):
+    __tablename__ = "DepartmentCaseFlag"
+    
+    FlagID = Column(Integer, primary_key=True, index=True)
+    CaseMasterID = Column(Integer, ForeignKey("CaseMaster.CaseMasterID"), nullable=False, index=True)
+    FlaggedByEmployeeID = Column(Integer, ForeignKey("Employee.EmployeeID"), nullable=False)
+    FromDepartmentID = Column(Integer, ForeignKey("Department.DepartmentID"), nullable=False)
+    ToDepartmentID = Column(Integer, ForeignKey("Department.DepartmentID"), nullable=False)
+    Note = Column(String, nullable=True)
+    CreatedAt = Column(DateTime, nullable=False)
+    Status = Column(String, nullable=False, default="open") # "open" | "acknowledged" | "resolved"
+    
+    case = relationship("CaseMaster", back_populates="department_flags")
+    flagged_by = relationship("Employee", foreign_keys=[FlaggedByEmployeeID])
+    from_department = relationship("Department", foreign_keys=[FromDepartmentID])
+    to_department = relationship("Department", foreign_keys=[ToDepartmentID])
 
 class CaseSummary(Base):
     __tablename__ = "CaseSummary"
@@ -180,10 +247,11 @@ class Notification(Base):
     RecipientUnitID = Column(Integer, ForeignKey("Unit.UnitID"), nullable=True)
     Title = Column(String, nullable=False)
     Message = Column(String, nullable=False)
-    Type = Column(String, nullable=False) # "alert" | "new_fir" | "account"
+    Type = Column(String, nullable=False) # "alert" | "new_fir" | "account" | "urgent_case_alert"
     RelatedID = Column(Integer, nullable=True)
     CreatedAt = Column(DateTime, nullable=False)
     IsRead = Column(Boolean, default=False, nullable=False)
+    IsUrgent = Column(Boolean, default=False, nullable=False)
 
 class Evidence(Base):
     __tablename__ = "Evidence"
@@ -230,3 +298,28 @@ class EvidenceLink(Base):
     UnlistedPersonNote = Column(String, nullable=True)
     
     evidence = relationship("Evidence", back_populates="links")
+
+class Investigation(Base):
+    __tablename__ = "Investigation"
+    
+    InvestigationID = Column(Integer, primary_key=True, index=True)
+    CaseMasterID = Column(Integer, ForeignKey("CaseMaster.CaseMasterID"), nullable=False, index=True)
+    OrderedByEmployeeID = Column(Integer, ForeignKey("Employee.EmployeeID"), nullable=True)
+    LeadOfficerEmployeeID = Column(Integer, ForeignKey("Employee.EmployeeID"), nullable=True)
+    DirectiveNote = Column(String, nullable=True)
+    CreatedAt = Column(DateTime, nullable=False)
+    
+    case = relationship("CaseMaster", backref="investigations")
+    ordered_by = relationship("Employee", foreign_keys=[OrderedByEmployeeID])
+    lead_officer = relationship("Employee", foreign_keys=[LeadOfficerEmployeeID])
+
+
+class CopilotQueryLog(Base):
+    __tablename__ = "CopilotQueryLog"
+    
+    LogID = Column(Integer, primary_key=True, index=True)
+    Query = Column(String, nullable=False)
+    MatchedIntent = Column(String, nullable=True)
+    EmployeeID = Column(Integer, ForeignKey("Employee.EmployeeID"), nullable=False)
+    CreatedAt = Column(DateTime, nullable=False)
+

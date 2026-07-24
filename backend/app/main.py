@@ -11,15 +11,17 @@ from app.db import engine, Base, get_db, SessionLocal
 from app.models.schema import (
     Unit, CaseCategory, CaseStatusMaster, CaseMaster,
     ComplainantDetails, Victim, Accused, ArrestSurrender,
-    Rank, Employee, PendingOTP, AdminUser
+    Rank, Employee, PendingOTP, AdminUser, PoliceZone, PoliceRange, District,
+    Department
 )
 from app.services.auth_service import get_password_hash
 from app.permissions import RANK_SEED_DATA
 
 app = FastAPI(title="AI-Powered Police Analytics Platform API", version="1.0.0")
 
-from app.routers import cases, dashboard, analytics, alerts, demo, auth, profile, admin, notifications, evidence, station
+from app.routers import cases, dashboard, analytics, alerts, demo, auth, profile, admin, notifications, evidence, station, district, department, copilot
 app.include_router(cases.router)
+app.include_router(district.router)
 app.include_router(dashboard.router)
 app.include_router(analytics.router)
 app.include_router(alerts.router)
@@ -30,6 +32,8 @@ app.include_router(admin.router)
 app.include_router(notifications.router)
 app.include_router(evidence.router)
 app.include_router(station.router)
+app.include_router(department.router)
+app.include_router(copilot.router)
 
 # Mount static files for uploads
 uploads_dir = os.path.join(os.path.dirname(__file__), "uploads")
@@ -59,6 +63,48 @@ def parse_date(date_str):
 def seed_database():
     db = SessionLocal()
     try:
+        if db.query(PoliceZone).first() is None:
+            print("Seeding Police Zones, Ranges, and Districts...")
+            zones = [
+                {"ZoneID": 1, "ZoneName": "State Zone 1"},
+                {"ZoneID": 2, "ZoneName": "State Zone 2"}
+            ]
+            for z in zones:
+                db.add(PoliceZone(**z))
+            db.commit()
+
+            ranges = [
+                {"RangeID": 1, "RangeName": "Central Range", "ZoneID": 1},
+                {"RangeID": 2, "RangeName": "Northern Range", "ZoneID": 1},
+                {"RangeID": 3, "RangeName": "Southern Range", "ZoneID": 2}
+            ]
+            for r in ranges:
+                db.add(PoliceRange(**r))
+            db.commit()
+
+            districts = [
+                {"DistrictID": 1, "DistrictName": "Bengaluru Central", "RangeID": 1},
+                {"DistrictID": 2, "DistrictName": "Bengaluru West", "RangeID": 1},
+                {"DistrictID": 3, "DistrictName": "Bengaluru North", "RangeID": 2},
+                {"DistrictID": 4, "DistrictName": "Bengaluru East", "RangeID": 2},
+                {"DistrictID": 5, "DistrictName": "Bengaluru South", "RangeID": 3},
+                {"DistrictID": 6, "DistrictName": "Bengaluru South East", "RangeID": 3},
+            ]
+            for d in districts:
+                db.add(District(**d))
+            db.commit()
+
+        if db.query(Department).first() is None:
+            print("Seeding Departments...")
+            departments = [
+                {"DepartmentID": 1, "DepartmentName": "Crime"},
+                {"DepartmentID": 2, "DepartmentName": "Traffic"},
+                {"DepartmentID": 3, "DepartmentName": "CID"},
+                {"DepartmentID": 4, "DepartmentName": "Cyber"}
+            ]
+            for dept in departments:
+                db.add(Department(**dept))
+            db.commit()
         # Seed Auth Data
         if db.query(AdminUser).first() is None:
             print("Seeding Admin User...")
@@ -83,20 +129,21 @@ def seed_database():
                 db.flush() # to get rank.RankID
                 rank_map[rank_data["RankName"]] = rank.RankID
                 
-            # Explicitly add all 10 demo accounts by name as requested
             demo_accounts = [
-                ("PC_10452_2015", "Police Constable", "Police Constable"),
-                ("HC_10218_2011", "Head Constable", "Head Constable"),
-                ("ASI_10084_2009", "Assistant Sub-Inspector", "Assistant Sub-Inspector"),
-                ("SI_10021_2007", "Sub-Inspector", "Sub-Inspector"),
-                ("PI_0007_2003", "Inspector / SHO", "Inspector / SHO"),
-                ("DYSP_015_1999", "DySP / ACP", "DySP / ACP"),
-                ("SP_0042_1995", "SP / DCP", "SP / DCP"),
-                ("IGP_0011_1991", "IGP", "IGP"),
-                ("ADGP_0004_1987", "ADGP", "ADGP"),
-                ("DGP_0001_1983", "DGP", "DGP")
+                ("PC_10452_2015", "Police Constable", "Police Constable", None),
+                ("HC_10218_2011", "Head Constable", "Head Constable", None),
+                ("ASI_10084_2009", "Assistant Sub-Inspector", "Assistant Sub-Inspector", None),
+                ("SI_10021_2007", "Sub-Inspector", "Sub-Inspector", None),
+                ("PI_0007_2003", "Inspector / SHO", "Inspector / SHO", None),
+                ("DYSP_015_1999", "DySP / ACP", "DySP / ACP", None),
+                ("SP_0042_1995", "SP / DCP", "SP / DCP", None),
+                ("DIG_0028_1993", "DIG", "DIG", None),
+                ("IGP_0011_1991", "IGP", "IGP", None),
+                ("ADGP_0004_1987", "ADGP (Crime)", "ADGP", 1), # Crime department
+                ("ADGP_0005_1987", "ADGP (Cyber)", "ADGP", 4), # Cyber department
+                ("DGP_0001_1983", "DGP", "DGP", None)
             ]
-            for i, (login_id, emp_name, rank_name) in enumerate(demo_accounts):
+            for i, (login_id, emp_name, rank_name, dept_id) in enumerate(demo_accounts):
                 existing = db.query(Employee).filter_by(LoginID=login_id).first()
                 if not existing:
                     # Mock phone number based on index for variety
@@ -110,7 +157,8 @@ def seed_database():
                         PhoneNumber=mock_phone,
                         Email=mock_email,
                         RankID=rank_map[rank_name],
-                        UnitID=1  # Default to Koramangala
+                        UnitID=1,  # Default to Koramangala
+                        DepartmentID=dept_id
                     ))
             db.commit()
 
@@ -139,17 +187,19 @@ def seed_database():
                 if unit_id not in units_inserted:
                     unit = db.query(Unit).filter_by(UnitID=unit_id).first()
                     if not unit:
-                        unit = Unit(UnitID=unit_id, UnitName=row["PoliceStationName"])
+                        unit = Unit(UnitID=unit_id, UnitName=row["PoliceStationName"], DistrictID=(unit_id % 6) + 1)
                         db.add(unit)
                     units_inserted.add(unit_id)
 
-                # 2. Seed Case Categories
+                # 2. Seed Case Categories (Default mapped to Crime - Dept 1)
                 cat_id = int(row["CaseCategoryID"])
                 if cat_id not in categories_inserted:
                     category = db.query(CaseCategory).filter_by(CaseCategoryID=cat_id).first()
                     if not category:
-                        category = CaseCategory(CaseCategoryID=cat_id, LookupValue=row["CaseCategoryName"])
+                        category = CaseCategory(CaseCategoryID=cat_id, LookupValue=row["CaseCategoryName"], DepartmentID=1)
                         db.add(category)
+                    elif not category.DepartmentID:
+                        category.DepartmentID = 1 # update existing to Crime
                     categories_inserted.add(cat_id)
 
                 # 3. Seed Case Status

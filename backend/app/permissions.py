@@ -8,6 +8,7 @@ RANK_PREFIX_MAP = {
     "PI": "Inspector / SHO",
     "DYSP": "DySP / ACP",
     "SP": "SP / DCP",
+    "DIG": "DIG",
     "IGP": "IGP",
     "ADGP": "ADGP",
     "DGP": "DGP"
@@ -46,7 +47,12 @@ RANK_PERMISSIONS = {
         "assign_officers",
         "station_reports",
         "approve_alert_action",
-        "dismiss_alert"
+        "dismiss_alert",
+        "transfer_case_within_station",
+        "approve_reports",
+        "manage_station_staff",
+        "view_station_dashboard",
+        "broadcast_urgent_alert"
     ],
     "DySP / ACP": [
         "monitor_stations",
@@ -59,22 +65,43 @@ RANK_PERMISSIONS = {
         "officer_management",
         "crime_stats",
         "approvals",
-        "district_reports"
+        "district_reports",
+        "order_investigation",
+        "manpower_allocation",
+        "district_alerts",
+        "approve_major_operations"
+    ],
+    "DIG": [
+        "compare_districts",
+        "regional_analytics",
+        "review_district_performance"
     ],
     "IGP": [
         "regional_monitoring",
         "regional_analytics",
-        "inter_district_coord"
+        "inter_district_coord",
+        "regional_heatmap",
+        "district_risk_rating",
+        "policy_dashboard",
+        "approve_regional_operations"
     ],
     "ADGP": [
         "dept_wide_monitoring",
-        "strategic_dashboards"
+        "strategic_dashboards",
+        "department_dashboard",
+        "inter_department_collaboration",
+        "ai_insights_statewide",
+        "predictive_analytics"
     ],
     "DGP": [
         "state_wide_access",
         "analytics",
         "policy_reports",
-        "admin_oversight"
+        "admin_oversight",
+        "ai_copilot",
+        "anomaly_detection",
+        "criminal_network_graph",
+        "decision_timeline"
     ]
 }
 
@@ -107,6 +134,7 @@ RANK_SEED_DATA = [
     {"Hierarchy": 6, "RankName": "Inspector / SHO", "LoginID": "PI_0007_2003", "EmployeeName": "Inspector Singh"},
     {"Hierarchy": 5, "RankName": "DySP / ACP", "LoginID": "DYSP_015_1999", "EmployeeName": "DySP Reddy"},
     {"Hierarchy": 4, "RankName": "SP / DCP", "LoginID": "SP_0042_1995", "EmployeeName": "SP Sharma"},
+    {"Hierarchy": 3.5, "RankName": "DIG", "LoginID": "DIG_0028_1993", "EmployeeName": "DIG Khanna"},
     {"Hierarchy": 3, "RankName": "IGP", "LoginID": "IGP_0011_1991", "EmployeeName": "IGP Verma"},
     {"Hierarchy": 2, "RankName": "ADGP", "LoginID": "ADGP_0004_1987", "EmployeeName": "ADGP Rao"},
     {"Hierarchy": 1, "RankName": "DGP", "LoginID": "DGP_0001_1983", "EmployeeName": "DGP Prasad"}

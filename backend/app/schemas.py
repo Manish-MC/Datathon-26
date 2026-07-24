@@ -92,6 +92,8 @@ class CaseCreate(BaseModel):
     latitude: float
     longitude: float
     BriefFacts: str
+    BroadcastOnCreate: bool = False
+    BroadcastReason: Optional[str] = None
 
 class CaseMasterList(BaseModel):
     CaseMasterID: int
@@ -124,6 +126,7 @@ class CaseMasterDetail(CaseMasterList):
     arrests: List[ArrestBase] = []
     summary: Optional[CaseSummaryBase] = None
     evidence: List[EvidenceResponse] = []
+    investigations: List['InvestigationResponse'] = []
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -199,8 +202,147 @@ class NotificationResponse(BaseModel):
     RelatedID: Optional[int] = None
     CreatedAt: datetime
     IsRead: bool
+    IsUrgent: bool
     
     model_config = ConfigDict(from_attributes=True)
 
+class BroadcastRequest(BaseModel):
+    reason: str
+
 class UnreadCountResponse(BaseModel):
     count: int
+
+class InvestigationBase(BaseModel):
+    InvestigationID: int
+    CaseMasterID: int
+    OrderedByEmployeeID: Optional[int] = None
+    LeadOfficerEmployeeID: Optional[int] = None
+    DirectiveNote: Optional[str] = None
+    CreatedAt: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+class InvestigationResponse(InvestigationBase):
+    pass
+
+class OrderInvestigationRequest(BaseModel):
+    TargetInspectorEmployeeID: Optional[int] = None
+    NotifyAllInspectors: bool = False
+    DirectiveNote: Optional[str] = None
+
+class DistrictResponse(BaseModel):
+    DistrictID: int
+    DistrictName: str
+    RangeID: int
+    model_config = ConfigDict(from_attributes=True)
+
+class DistrictComparisonStats(BaseModel):
+    DistrictID: int
+    DistrictName: str
+    total_cases: int
+    active_hotspots: int
+    trend_90_days_pct: float
+    categories: dict
+
+class DistrictComparisonResponse(BaseModel):
+    districts: List[DistrictComparisonStats]
+    insights: List[str]
+
+class RegionalHeatmapItem(BaseModel):
+    district_id: int
+    district_name: str
+    lat: float
+    lng: float
+    case_count: int
+    intensity: float
+
+class RiskFactorBreakdown(BaseModel):
+    case_volume_trend: float
+    hotspot_density: float
+    severity_mix: float
+
+class DistrictRiskRatingItem(BaseModel):
+    district_id: int
+    district_name: str
+    risk_index: float
+    breakdown: RiskFactorBreakdown
+
+class DistrictRiskRatingResponse(BaseModel):
+    ratings: List[DistrictRiskRatingItem]
+
+class DepartmentResponse(BaseModel):
+    DepartmentID: int
+    DepartmentName: str
+    model_config = ConfigDict(from_attributes=True)
+
+class DepartmentCaseFlagCreate(BaseModel):
+    ToDepartmentID: int
+    Note: str
+
+class DepartmentCaseFlagUpdate(BaseModel):
+    Status: str # "acknowledged" or "resolved"
+
+class DepartmentCaseFlagResponse(BaseModel):
+    FlagID: int
+    CaseMasterID: int
+    CrimeNo: str
+    FlaggedByEmployeeID: int
+    FlaggedByEmployeeName: str
+    FlaggedByRank: str
+    FromDepartmentID: int
+    FromDepartmentName: str
+    ToDepartmentID: int
+    Note: str
+    CreatedAt: datetime
+    Status: str
+    model_config = ConfigDict(from_attributes=True)
+
+class DepartmentStatusBreakdown(BaseModel):
+    status_name: str
+    count: int
+
+class DepartmentKPIResponse(BaseModel):
+    total_cases: int
+    trend_90_days_pct: float
+    status_breakdown: List[DepartmentStatusBreakdown]
+    district_risk_ratings: List[DistrictRiskRatingItem]
+
+class CopilotQueryRequest(BaseModel):
+    query: str
+
+class CopilotQueryResponse(BaseModel):
+    text: str
+    endpoint_used: Optional[str] = None
+
+class AnomalyItem(BaseModel):
+    district_id: int
+    district_name: str
+    z_score: float
+    reason: str
+
+class AnomalyResponse(BaseModel):
+    anomalies: List[AnomalyItem]
+
+class NetworkNode(BaseModel):
+    id: str
+    label: str
+    type: str # 'Case', 'Accused', 'Victim'
+    detail_id: int # To link back to case or person
+
+class NetworkEdge(BaseModel):
+    source: str
+    target: str
+    label: str
+
+class NetworkGraphResponse(BaseModel):
+    nodes: List[NetworkNode]
+    edges: List[NetworkEdge]
+
+class TimelineEvent(BaseModel):
+    timestamp: datetime
+    type: str
+    summary: str
+    actor: str
+    related_case_id: Optional[int]
+
+class TimelineResponse(BaseModel):
+    events: List[TimelineEvent]
