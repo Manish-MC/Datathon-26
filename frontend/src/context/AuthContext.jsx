@@ -35,7 +35,9 @@ export const AuthProvider = ({ children }) => {
         rank: response.rank,
         permissions: response.permissions,
         hierarchy: response.hierarchy,
-        role: response.role
+        role: response.role,
+        zone_id: response.zone_id,
+        department_id: response.department_id
       };
       
       setUser(userData);

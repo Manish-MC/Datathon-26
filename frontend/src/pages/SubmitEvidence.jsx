@@ -145,11 +145,11 @@ export default function SubmitEvidence() {
         <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mb-6 border border-emerald-500/30">
           <CheckCircle className="w-10 h-10 text-emerald-400" />
         </div>
-        <h2 className="text-3xl font-light text-white mb-4">Evidence Uploaded</h2>
-        <p className="text-slate-400 mb-8 text-lg">Your evidence has been securely attached to Case {selectedCase?.CrimeNo}.</p>
+        <h2 className="text-3xl font-light text-sys-text-inverse mb-4">Evidence Uploaded</h2>
+        <p className="text-sys-text-muted mb-8 text-lg">Your evidence has been securely attached to Case {selectedCase?.CrimeNo}.</p>
         <button 
           onClick={() => navigate(`/case/${selectedCase?.CaseMasterID}`)}
-          className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)]"
+          className="px-6 py-3 bg-sys-primary hover:bg-sys-primary-hover text-sys-text-inverse rounded-lg font-medium transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)]"
         >
           View Case Details
         </button>
@@ -160,11 +160,11 @@ export default function SubmitEvidence() {
   return (
     <div className="flex-1 overflow-y-auto p-6 md:p-8 max-w-4xl mx-auto w-full">
       <div className="mb-8">
-        <h1 className="text-2xl font-light text-white flex items-center">
+        <h1 className="text-2xl font-light text-sys-text-main flex items-center">
           <Camera className="w-6 h-6 text-blue-500 mr-3" />
           Submit Evidence
         </h1>
-        <p className="text-slate-400 text-sm mt-1">Upload files, photos, or documents and attach them to a registered case.</p>
+        <p className="text-sys-text-muted text-sm mt-1">Upload files, photos, or documents and attach them to a registered case.</p>
       </div>
 
       {error && (
@@ -177,18 +177,18 @@ export default function SubmitEvidence() {
       <form onSubmit={handleSubmit} className="space-y-6">
         
         {/* Case Selection */}
-        <div className="bg-[#0f1523] border border-slate-800 rounded-xl p-5 shadow-lg">
-          <h2 className="text-sm font-medium text-slate-300 mb-4 uppercase tracking-wider">1. Select Case</h2>
+        <div className="bg-sys-surface border border-sys-border rounded-xl p-5 shadow-lg">
+          <h2 className="text-sm font-medium text-sys-text-muted mb-4 uppercase tracking-wider">1. Select Case</h2>
           
           {!selectedCase ? (
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-slate-500" />
+                <Search className="h-5 w-5 text-sys-text-muted" />
               </div>
               <input
                 type="text"
                 placeholder="Search by Crime No, Victim, or Accused..."
-                className="w-full bg-[#161f33] border border-slate-700 rounded-lg pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none"
+                className="w-full bg-sys-bg border border-sys-border-strong rounded-lg pl-10 pr-4 py-3 text-sm text-sys-text-main placeholder:text-sys-text-muted focus:border-sys-primary focus:ring-1 focus:ring-blue-500 transition-all outline-none"
                 value={caseSearch}
                 onChange={(e) => setCaseSearch(e.target.value)}
               />
@@ -199,17 +199,17 @@ export default function SubmitEvidence() {
               )}
               
               {searchResults.length > 0 && (
-                <div className="absolute z-10 w-full mt-2 bg-[#161f33] border border-slate-700 rounded-lg shadow-2xl max-h-60 overflow-auto">
+                <div className="absolute z-10 w-full mt-2 bg-sys-bg border border-sys-border-strong rounded-lg shadow-2xl max-h-60 overflow-auto">
                   {searchResults.map(c => (
                     <button
                       key={c.CaseMasterID}
                       type="button"
                       onClick={() => handleSelectCase(c)}
-                      className="w-full text-left px-4 py-3 border-b border-slate-800/50 hover:bg-slate-800 transition-colors flex items-center justify-between"
+                      className="w-full text-left px-4 py-3 border-b border-sys-border/50 hover:bg-sys-surface-hover transition-colors flex items-center justify-between"
                     >
                       <div>
-                        <div className="text-white font-medium text-sm">{c.CrimeNo}</div>
-                        <div className="text-slate-500 text-xs truncate max-w-sm">{c.BriefFacts}</div>
+                        <div className="text-sys-text-main font-medium text-sm">{c.CrimeNo}</div>
+                        <div className="text-sys-text-muted text-xs truncate max-w-sm">{c.BriefFacts}</div>
                       </div>
                     </button>
                   ))}
@@ -217,15 +217,15 @@ export default function SubmitEvidence() {
               )}
             </div>
           ) : (
-            <div className="flex items-center justify-between bg-[#161f33] border border-blue-500/30 p-4 rounded-lg">
+            <div className="flex items-center justify-between bg-sys-bg border border-sys-primary/30 p-4 rounded-lg">
               <div>
-                <p className="text-blue-400 text-sm font-semibold">{selectedCase.CrimeNo}</p>
-                <p className="text-slate-400 text-xs mt-1">Registered: {new Date(selectedCase.CrimeRegisteredDate).toLocaleDateString()}</p>
+                <p className="text-sys-primary text-sm font-semibold">{selectedCase.CrimeNo}</p>
+                <p className="text-sys-text-muted text-xs mt-1">Registered: {new Date(selectedCase.CrimeRegisteredDate).toLocaleDateString()}</p>
               </div>
               <button 
                 type="button" 
                 onClick={() => setSelectedCase(null)}
-                className="text-slate-400 hover:text-white p-2"
+                className="text-sys-text-muted hover:text-sys-text-main p-2"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -234,28 +234,28 @@ export default function SubmitEvidence() {
         </div>
 
         {/* Evidence File */}
-        <div className="bg-[#0f1523] border border-slate-800 rounded-xl p-5 shadow-lg opacity-100 transition-opacity" style={{ opacity: selectedCase ? 1 : 0.5, pointerEvents: selectedCase ? 'auto' : 'none' }}>
-          <h2 className="text-sm font-medium text-slate-300 mb-4 uppercase tracking-wider">2. Evidence File</h2>
+        <div className="bg-sys-surface border border-sys-border rounded-xl p-5 shadow-lg opacity-100 transition-opacity" style={{ opacity: selectedCase ? 1 : 0.5, pointerEvents: selectedCase ? 'auto' : 'none' }}>
+          <h2 className="text-sm font-medium text-sys-text-muted mb-4 uppercase tracking-wider">2. Evidence File</h2>
           
           <div className="flex items-center justify-center w-full">
-            <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-slate-700 border-dashed rounded-lg cursor-pointer bg-[#161f33] hover:bg-slate-800 transition-colors">
+            <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-sys-border-strong border-dashed rounded-lg cursor-pointer bg-sys-bg hover:bg-sys-surface-hover transition-colors">
               <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                <UploadCloud className="w-10 h-10 text-slate-500 mb-3" />
-                <p className="mb-2 text-sm text-slate-400">
-                  <span className="font-semibold text-blue-400">Click to upload</span> or drag and drop
+                <UploadCloud className="w-10 h-10 text-sys-text-muted mb-3" />
+                <p className="mb-2 text-sm text-sys-text-muted">
+                  <span className="font-semibold text-sys-primary">Click to upload</span> or drag and drop
                 </p>
-                <p className="text-xs text-slate-500">IMG, VID, AUD, PDF, DOC (MAX. 25MB)</p>
+                <p className="text-xs text-sys-text-muted">IMG, VID, AUD, PDF, DOC (MAX. 25MB)</p>
               </div>
               <input type="file" className="hidden" onChange={handleFileChange} accept=".jpg,.jpeg,.png,.heic,.mp4,.mov,.mp3,.wav,.m4a,.pdf,.doc,.docx" />
             </label>
           </div>
           
           {file && (
-            <div className="mt-4 flex items-center bg-[#1a233a] p-3 rounded-lg border border-slate-700">
-              <FileText className="w-6 h-6 text-blue-400 mr-3" />
+            <div className="mt-4 flex items-center bg-sys-surface-hover p-3 rounded-lg border border-sys-border-strong">
+              <FileText className="w-6 h-6 text-sys-primary mr-3" />
               <div className="flex-1">
-                <p className="text-sm text-slate-200 truncate">{file.name}</p>
-                <p className="text-xs text-slate-500">{(file.size / (1024 * 1024)).toFixed(2)} MB</p>
+                <p className="text-sm text-sys-text-main truncate">{file.name}</p>
+                <p className="text-xs text-sys-text-muted">{(file.size / (1024 * 1024)).toFixed(2)} MB</p>
               </div>
               <button type="button" onClick={() => setFile(null)} className="text-rose-400 p-2 hover:bg-rose-500/10 rounded-full">
                 <X className="w-4 h-4" />
@@ -264,11 +264,11 @@ export default function SubmitEvidence() {
           )}
           
           <div className="mt-4">
-            <label className="block text-xs font-medium text-slate-400 mb-2">Description / Notes</label>
+            <label className="block text-xs font-medium text-sys-text-muted mb-2">Description / Notes</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full bg-[#161f33] border border-slate-700 rounded-lg p-3 text-sm text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+              className="w-full bg-sys-bg border border-sys-border-strong rounded-lg p-3 text-sm text-sys-text-main placeholder:text-sys-text-muted focus:border-sys-primary focus:ring-1 focus:ring-blue-500 outline-none"
               rows={3}
               placeholder="Provide context about this evidence..."
             />
@@ -276,14 +276,14 @@ export default function SubmitEvidence() {
         </div>
 
         {/* Location */}
-        <div className="bg-[#0f1523] border border-slate-800 rounded-xl p-5 shadow-lg" style={{ opacity: selectedCase ? 1 : 0.5, pointerEvents: selectedCase ? 'auto' : 'none' }}>
-          <h2 className="text-sm font-medium text-slate-300 mb-4 uppercase tracking-wider">3. Location details</h2>
+        <div className="bg-sys-surface border border-sys-border rounded-xl p-5 shadow-lg" style={{ opacity: selectedCase ? 1 : 0.5, pointerEvents: selectedCase ? 'auto' : 'none' }}>
+          <h2 className="text-sm font-medium text-sys-text-muted mb-4 uppercase tracking-wider">3. Location details</h2>
           
           <div className="space-y-4">
             <button 
               type="button" 
               onClick={getLocation}
-              className="flex items-center space-x-2 text-sm bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 px-4 py-2.5 rounded-lg transition-colors"
+              className="flex items-center space-x-2 text-sm bg-blue-600/20 hover:bg-blue-600/30 text-sys-primary border border-sys-primary/30 px-4 py-2.5 rounded-lg transition-colors"
             >
               <MapPin className="w-4 h-4" />
               <span>Use Current GPS Location</span>
@@ -296,30 +296,30 @@ export default function SubmitEvidence() {
             )}
             
             <div>
-              <label className="block text-xs font-medium text-slate-400 mb-2">Manual Location (Optional fallback)</label>
+              <label className="block text-xs font-medium text-sys-text-muted mb-2">Manual Location (Optional fallback)</label>
               <input
                 type="text"
                 value={locationText}
                 onChange={(e) => setLocationText(e.target.value)}
                 placeholder="e.g. Near the main gate, 3rd floor..."
-                className="w-full bg-[#161f33] border border-slate-700 rounded-lg px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-blue-500 outline-none"
+                className="w-full bg-sys-bg border border-sys-border-strong rounded-lg px-4 py-2.5 text-sm text-sys-text-main placeholder:text-sys-text-muted focus:border-sys-primary outline-none"
               />
             </div>
           </div>
         </div>
         
         {/* Linked Persons */}
-        <div className="bg-[#0f1523] border border-slate-800 rounded-xl p-5 shadow-lg" style={{ opacity: selectedCase ? 1 : 0.5, pointerEvents: selectedCase ? 'auto' : 'none' }}>
-          <h2 className="text-sm font-medium text-slate-300 mb-4 uppercase tracking-wider">4. Linked Persons</h2>
+        <div className="bg-sys-surface border border-sys-border rounded-xl p-5 shadow-lg" style={{ opacity: selectedCase ? 1 : 0.5, pointerEvents: selectedCase ? 'auto' : 'none' }}>
+          <h2 className="text-sm font-medium text-sys-text-muted mb-4 uppercase tracking-wider">4. Linked Persons</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-xs font-medium text-slate-400 mb-2">Select Suspects/Accused</label>
+              <label className="block text-xs font-medium text-sys-text-muted mb-2">Select Suspects/Accused</label>
               <select
                 multiple
                 value={selectedAccused}
                 onChange={(e) => setSelectedAccused(Array.from(e.target.selectedOptions, option => option.value))}
-                className="w-full bg-[#161f33] border border-slate-700 rounded-lg p-3 text-sm text-white focus:border-blue-500 outline-none h-24"
+                className="w-full bg-sys-surface border border-sys-border-strong rounded-lg p-3 text-sm text-sys-text-main focus:border-sys-primary outline-none h-24"
               >
                 {caseDetails?.accused?.map(a => (
                   <option key={a.AccusedMasterID} value={a.AccusedMasterID}>{a.AccusedName}</option>
@@ -328,12 +328,12 @@ export default function SubmitEvidence() {
             </div>
             
             <div>
-              <label className="block text-xs font-medium text-slate-400 mb-2">Select Victims</label>
+              <label className="block text-xs font-medium text-sys-text-muted mb-2">Select Victims</label>
               <select
                 multiple
                 value={selectedVictims}
                 onChange={(e) => setSelectedVictims(Array.from(e.target.selectedOptions, option => option.value))}
-                className="w-full bg-[#161f33] border border-slate-700 rounded-lg p-3 text-sm text-white focus:border-blue-500 outline-none h-24"
+                className="w-full bg-sys-surface border border-sys-border-strong rounded-lg p-3 text-sm text-sys-text-main focus:border-sys-primary outline-none h-24"
               >
                 {caseDetails?.victims?.map(v => (
                   <option key={v.VictimMasterID} value={v.VictimMasterID}>{v.VictimName}</option>
@@ -343,13 +343,13 @@ export default function SubmitEvidence() {
           </div>
           
           <div className="mt-4">
-            <label className="block text-xs font-medium text-slate-400 mb-2">Unlisted Person Note</label>
+            <label className="block text-xs font-medium text-sys-text-muted mb-2">Unlisted Person Note</label>
             <input
               type="text"
               value={unlistedNote}
               onChange={(e) => setUnlistedNote(e.target.value)}
               placeholder="If the evidence is linked to someone not listed above, describe them here..."
-              className="w-full bg-[#161f33] border border-slate-700 rounded-lg px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-blue-500 outline-none"
+              className="w-full bg-sys-surface border border-sys-border-strong rounded-lg px-4 py-2.5 text-sm text-sys-text-main placeholder:text-sys-text-muted focus:border-sys-primary outline-none"
             />
           </div>
         </div>
@@ -357,7 +357,7 @@ export default function SubmitEvidence() {
         <button
           type="submit"
           disabled={!selectedCase || !file || isSubmitting}
-          className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-lg py-4 font-medium transition-all shadow-[0_0_20px_rgba(37,99,235,0.2)] disabled:shadow-none flex items-center justify-center"
+          className="w-full bg-sys-primary hover:bg-sys-primary-hover disabled:bg-sys-surface-hover disabled:text-sys-text-muted text-sys-text-inverse rounded-lg py-4 font-medium transition-all shadow-[0_0_20px_rgba(37,99,235,0.2)] disabled:shadow-none flex items-center justify-center"
         >
           {isSubmitting ? (
             <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Uploading...</>

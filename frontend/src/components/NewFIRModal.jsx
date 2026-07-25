@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Save, AlertTriangle, Loader2 } from 'lucide-react';
 import { api } from '../api/client';
+import { useAuth } from '../context/AuthContext';
 
 export default function NewFIRModal({ isOpen, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
@@ -11,7 +12,11 @@ export default function NewFIRModal({ isOpen, onClose, onSuccess }) {
     latitude: 12.9716, // Default Bangalore Lat
     longitude: 77.5946, // Default Bangalore Lon
     BriefFacts: '',
+    BroadcastReason: '',
   });
+
+  const { hasPermission } = useAuth();
+  const [sendUrgentAlert, setSendUrgentAlert] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -58,7 +63,8 @@ export default function NewFIRModal({ isOpen, onClose, onSuccess }) {
 
       const payload = {
         ...formData,
-        IncidentFromDate: formattedDate
+        IncidentFromDate: formattedDate,
+        BroadcastOnCreate: sendUrgentAlert
       };
 
       const result = await api.createCase(payload);
@@ -73,7 +79,9 @@ export default function NewFIRModal({ isOpen, onClose, onSuccess }) {
         latitude: 12.9716,
         longitude: 77.5946,
         BriefFacts: '',
+        BroadcastReason: '',
       });
+      setSendUrgentAlert(false);
     } catch (err) {
       setSubmitError(err.message || 'Failed to submit FIR');
     } finally {
@@ -83,14 +91,14 @@ export default function NewFIRModal({ isOpen, onClose, onSuccess }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-[#0f172a] border border-slate-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+      <div className="bg-sys-surface border border-sys-border rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-800 shrink-0">
+        <div className="flex items-center justify-between p-6 border-b border-sys-border shrink-0">
           <div>
-            <h2 className="text-xl font-semibold text-slate-100">File New FIR</h2>
-            <p className="text-sm text-slate-400 mt-1">Submit a new incident for real-time analysis</p>
+            <h2 className="text-xl font-semibold text-sys-text-main">File New FIR</h2>
+            <p className="text-sm text-sys-text-muted mt-1">Submit a new incident for real-time analysis</p>
           </div>
-          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-200 transition-colors rounded-lg hover:bg-slate-800">
+          <button onClick={onClose} className="p-2 text-sys-text-muted hover:text-sys-text-main transition-colors rounded-lg hover:bg-sys-surface-hover">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -104,32 +112,43 @@ export default function NewFIRModal({ isOpen, onClose, onSuccess }) {
             </div>
           )}
 
+          {!hasPermission('register_fir') ? (
+            <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+              <div className="w-16 h-16 bg-sys-surface-hover rounded-full flex items-center justify-center mb-4">
+                <AlertTriangle className="w-8 h-8 text-amber-500" />
+              </div>
+              <h3 className="text-lg font-medium text-sys-text-main mb-2">Permission Denied</h3>
+              <p className="text-sys-text-muted text-sm max-w-sm">
+                You do not have the required permissions to file a new FIR. Only officers of rank Sub-Inspector and above can register new cases.
+              </p>
+            </div>
+          ) : (
           <form id="new-fir-form" onSubmit={handleSubmit} className="space-y-6">
             
             <div className="grid grid-cols-2 gap-6">
               {/* Crime No */}
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">Crime Number *</label>
+                <label className="block text-sm font-medium text-sys-text-muted mb-1.5">Crime Number *</label>
                 <input
                   type="text"
                   name="CrimeNo"
                   value={formData.CrimeNo}
                   onChange={handleChange}
                   placeholder="e.g. CR-2026-1042"
-                  className={`w-full bg-[#1e293b] border ${errors.CrimeNo ? 'border-rose-500' : 'border-slate-700'} rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-blue-500 transition-colors`}
+                  className={`w-full bg-sys-surface border ${errors.CrimeNo ? 'border-rose-500' : 'border-sys-border-strong'} rounded-lg px-4 py-2 text-sys-text-main focus:outline-none focus:border-sys-primary transition-colors`}
                 />
                 {errors.CrimeNo && <p className="text-rose-400 text-xs mt-1">{errors.CrimeNo}</p>}
               </div>
 
               {/* Date */}
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">Incident Date & Time *</label>
+                <label className="block text-sm font-medium text-sys-text-muted mb-1.5">Incident Date & Time *</label>
                 <input
                   type="datetime-local"
                   name="IncidentFromDate"
                   value={formData.IncidentFromDate}
                   onChange={handleChange}
-                  className={`w-full bg-[#1e293b] border ${errors.IncidentFromDate ? 'border-rose-500' : 'border-slate-700'} rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-blue-500 transition-colors [color-scheme:dark]`}
+                  className={`w-full bg-sys-surface border ${errors.IncidentFromDate ? 'border-rose-500' : 'border-sys-border-strong'} rounded-lg px-4 py-2 text-sys-text-main focus:outline-none focus:border-sys-primary transition-colors [color-scheme:dark]`}
                 />
                 {errors.IncidentFromDate && <p className="text-rose-400 text-xs mt-1">{errors.IncidentFromDate}</p>}
               </div>
@@ -138,12 +157,12 @@ export default function NewFIRModal({ isOpen, onClose, onSuccess }) {
             <div className="grid grid-cols-2 gap-6">
               {/* Category */}
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">Case Category *</label>
+                <label className="block text-sm font-medium text-sys-text-muted mb-1.5">Case Category *</label>
                 <select
                   name="CaseCategoryID"
                   value={formData.CaseCategoryID}
                   onChange={handleChange}
-                  className="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-sys-surface border border-sys-border-strong rounded-lg px-4 py-2 text-sys-text-main focus:outline-none focus:border-sys-primary transition-colors"
                 >
                   <option value={1}>Theft / Burglary</option>
                   <option value={2}>Assault / Violent Crime</option>
@@ -157,12 +176,12 @@ export default function NewFIRModal({ isOpen, onClose, onSuccess }) {
 
               {/* Station */}
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">Police Station *</label>
+                <label className="block text-sm font-medium text-sys-text-muted mb-1.5">Police Station *</label>
                 <select
                   name="PoliceStationID"
                   value={formData.PoliceStationID}
                   onChange={handleChange}
-                  className="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-sys-surface border border-sys-border-strong rounded-lg px-4 py-2 text-sys-text-main focus:outline-none focus:border-sys-primary transition-colors"
                 >
                   <option value={1}>Koramangala PS</option>
                   <option value={2}>Indiranagar PS</option>
@@ -178,28 +197,28 @@ export default function NewFIRModal({ isOpen, onClose, onSuccess }) {
             <div className="grid grid-cols-2 gap-6">
               {/* Latitude */}
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">Latitude *</label>
+                <label className="block text-sm font-medium text-sys-text-muted mb-1.5">Latitude *</label>
                 <input
                   type="number"
                   step="0.0001"
                   name="latitude"
                   value={formData.latitude}
                   onChange={handleChange}
-                  className={`w-full bg-[#1e293b] border ${errors.latitude ? 'border-rose-500' : 'border-slate-700'} rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-blue-500 transition-colors`}
+                  className={`w-full bg-sys-surface border ${errors.latitude ? 'border-rose-500' : 'border-sys-border-strong'} rounded-lg px-4 py-2 text-sys-text-main focus:outline-none focus:border-sys-primary transition-colors`}
                 />
                 {errors.latitude && <p className="text-rose-400 text-xs mt-1">{errors.latitude}</p>}
               </div>
 
               {/* Longitude */}
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">Longitude *</label>
+                <label className="block text-sm font-medium text-sys-text-muted mb-1.5">Longitude *</label>
                 <input
                   type="number"
                   step="0.0001"
                   name="longitude"
                   value={formData.longitude}
                   onChange={handleChange}
-                  className={`w-full bg-[#1e293b] border ${errors.longitude ? 'border-rose-500' : 'border-slate-700'} rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-blue-500 transition-colors`}
+                  className={`w-full bg-sys-surface border ${errors.longitude ? 'border-rose-500' : 'border-sys-border-strong'} rounded-lg px-4 py-2 text-sys-text-main focus:outline-none focus:border-sys-primary transition-colors`}
                 />
                 {errors.longitude && <p className="text-rose-400 text-xs mt-1">{errors.longitude}</p>}
               </div>
@@ -207,35 +226,65 @@ export default function NewFIRModal({ isOpen, onClose, onSuccess }) {
 
             {/* Brief Facts */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Brief Facts *</label>
+              <label className="block text-sm font-medium text-sys-text-muted mb-1.5">Brief Facts *</label>
               <textarea
                 name="BriefFacts"
                 value={formData.BriefFacts}
                 onChange={handleChange}
                 rows={5}
                 placeholder="Describe the incident in detail..."
-                className={`w-full bg-[#1e293b] border ${errors.BriefFacts ? 'border-rose-500' : 'border-slate-700'} rounded-lg px-4 py-3 text-slate-200 focus:outline-none focus:border-blue-500 transition-colors resize-none`}
+                className={`w-full bg-sys-surface border ${errors.BriefFacts ? 'border-rose-500' : 'border-sys-border-strong'} rounded-lg px-4 py-3 text-sys-text-main focus:outline-none focus:border-sys-primary transition-colors resize-none`}
               />
               {errors.BriefFacts && <p className="text-rose-400 text-xs mt-1">{errors.BriefFacts}</p>}
             </div>
 
+            {hasPermission('broadcast_urgent_alert') && (
+              <div className="flex flex-col space-y-3 bg-rose-500/10 border border-rose-500/20 p-4 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <input 
+                    type="checkbox" 
+                    id="urgentAlertCheckbox"
+                    checked={sendUrgentAlert}
+                    onChange={(e) => setSendUrgentAlert(e.target.checked)}
+                    className="w-4 h-4 rounded border-rose-500 text-rose-500 focus:ring-rose-500 bg-sys-surface"
+                  />
+                  <label htmlFor="urgentAlertCheckbox" className="text-sm font-medium text-rose-400 cursor-pointer">
+                    Broadcast urgent inspection alert to station officers on submit
+                  </label>
+                </div>
+                {sendUrgentAlert && (
+                  <div className="pl-7">
+                    <input
+                      type="text"
+                      name="BroadcastReason"
+                      value={formData.BroadcastReason}
+                      onChange={handleChange}
+                      placeholder="Short reason for the alert..."
+                      className="w-full bg-sys-surface border border-rose-500/50 rounded-lg px-4 py-2 text-sys-text-main focus:outline-none focus:border-rose-500 transition-colors text-sm"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
           </form>
+          )}
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-slate-800 flex justify-end space-x-4 shrink-0 bg-[#0a0f1d] rounded-b-xl">
+        <div className="p-6 border-t border-sys-border flex justify-end space-x-4 shrink-0 bg-sys-bg rounded-b-xl">
           <button 
             type="button" 
             onClick={onClose}
-            className="px-5 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:text-slate-100 hover:bg-slate-800 transition-colors"
+            className="px-5 py-2.5 rounded-lg text-sm font-medium text-sys-text-muted hover:text-sys-text-main hover:bg-sys-surface-hover transition-colors"
           >
             Cancel
           </button>
           <button 
             type="submit" 
             form="new-fir-form"
-            disabled={loading}
-            className="px-6 py-2.5 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={loading || !hasPermission('register_fir')}
+            className="px-6 py-2.5 rounded-lg text-sm font-medium bg-sys-primary hover:bg-sys-primary-hover text-sys-text-inverse transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             <span>{loading ? 'Submitting...' : 'Submit Case'}</span>

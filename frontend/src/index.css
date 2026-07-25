@@ -1,19 +1,33 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
+@theme {
+  --font-sans: 'Outfit', system-ui, -apple-system, sans-serif;
+  --color-sys-bg: #F7F8FA;
+  --color-sys-surface: #FFFFFF;
+  --color-sys-surface-hover: #F1F5F9;
+  --color-sys-primary: #1B2A4A;
+  --color-sys-primary-hover: #15203A;
+  --color-sys-accent: #D4AF37;
+  --color-sys-text-main: #1e293b;
+  --color-sys-text-muted: #64748b;
+  --color-sys-text-inverse: #f8fafc;
+  --color-sys-border: #e2e8f0;
+  --color-sys-border-strong: #cbd5e1;
+}
+
 :root {
   --font-sans: 'Outfit', system-ui, -apple-system, sans-serif;
-  --color-brand-primary: #3b82f6;
-  --color-brand-secondary: #6366f1;
+  --color-brand-primary: #1B2A4A;
+  --color-brand-secondary: #D4AF37;
   --color-brand-accent: #f43f5e;
   --color-brand-success: #10b981;
 }
 
 body {
   font-family: var(--font-sans);
-  background-color: #090d16;
-  /* Deep dark blue-gray background */
-  color: #f3f4f6;
+  background-color: var(--color-sys-bg);
+  color: var(--color-sys-text-main);
   margin: 0;
   overflow-x: hidden;
 }
@@ -25,24 +39,20 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: var(--color-sys-border);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: var(--color-sys-text-muted);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: var(--color-sys-primary);
 }
 
-/* Leaflet map styles to blend with dark mode */
+/* Leaflet map styles to blend with light mode */
 .leaflet-container {
-  background-color: #0f172a !important;
+  background-color: var(--color-sys-surface) !important;
   border-radius: 0.75rem;
-}
-
-.leaflet-tile-pane {
-  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
 }

@@ -1,0 +1,50 @@
+.login-page-bg {
+  background: linear-gradient(135deg, #0F1B33 0%, #1B2A4A 100%);
+  background-color: #0F1B33;
+}
+
+.login-title {
+  color: #F8FAFC !important;
+}
+
+.login-subtitle {
+  color: #CBD5E1 !important;
+}
+
+.login-logo-perspective {
+  perspective: 1000px;
+}
+
+.login-logo-animate {
+  transform-style: preserve-3d;
+  animation: logo-flip-spin 5s infinite linear;
+}
+
+@keyframes logo-flip-spin {
+  0% {
+    transform: rotateY(0deg);
+  }
+  100% {
+    transform: rotateY(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-logo-animate {
+    animation: none;
+    transform: none;
+  }
+}
+
+.login-active-tab {
+  background-color: #d97706; /* amber-600 */
+  color: #ffffff;
+}
+
+.login-submit-btn {
+  background-color: #d97706;
+}
+
+.login-submit-btn:hover {
+  background-color: #b45309; /* amber-700 */
+}

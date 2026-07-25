@@ -77,11 +77,39 @@ export const api = {
   getStationTeam: () => apiFetch('/station/team'),
   getStationRecords: (query = '') => apiFetch(query ? `/station/records?q=${encodeURIComponent(query)}` : '/station/records'),
 
-  getDashboardStats: () => apiFetch("/dashboard/stats"),
+  getDashboardStats: (days = 180) => apiFetch(`/dashboard/stats?days=${days}`),
+  getDashboardTopOffenders: () => apiFetch("/dashboard/top-offenders"),
+  getDashboardDrilldown: () => apiFetch("/dashboard/drilldown"),
   
   getMapCases: () => apiFetch("/cases/map"),
   
   getAnalyticsHotspots: () => apiFetch("/analytics/hotspots"),
+  getRangeDistricts: () => apiFetch('/analytics/range-districts'),
+  getDistrictComparison: (districtIds) => apiFetch(`/analytics/district-comparison?district_ids=${districtIds.join(',')}`),
+  getRegionalHeatmap: (zoneId) => apiFetch(`/analytics/regional-heatmap?zone_id=${zoneId}`),
+  getDistrictRiskRatings: (zoneId) => apiFetch(`/analytics/district-risk-rating?zone_id=${zoneId}`),
+
+  getDepartments: () => apiFetch('/department/all'),
+  getDepartmentKPIs: (departmentId) => apiFetch(`/analytics/department-kpis?department_id=${departmentId}`),
+  getDepartmentFlags: (departmentId) => apiFetch(departmentId ? `/department/flags?department_id=${departmentId}` : '/department/flags'),
+  flagCaseToDepartment: (caseId, toDepartmentId, note) => apiFetch(`/department/cases/${caseId}/flag`, {
+    method: 'POST',
+    body: JSON.stringify({ ToDepartmentID: toDepartmentId, Note: note })
+  }),
+  updateDepartmentFlagStatus: (flagId, status) => apiFetch(`/department/flags/${flagId}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ Status: status })
+  }),
+
+  // DGP & Command Center
+  queryCopilot: (query) => apiFetch('/copilot/query', {
+    method: 'POST',
+    body: JSON.stringify({ query })
+  }),
+  getStatewideAnomalies: () => apiFetch('/analytics/statewide-anomalies'),
+  getNetworkGraph: (caseId = '') => apiFetch(caseId ? `/analytics/network-graph?case_id=${caseId}` : '/analytics/network-graph'),
+  getDecisionTimeline: () => apiFetch('/analytics/decision-timeline'),
+
   
   getSimilarCases: (id) => apiFetch(`/cases/${id}/similar`),
   
@@ -99,9 +127,20 @@ export const api = {
   getSummary: (id) => apiFetch(`/cases/${id}/summary`),
   regenerateSummary: (id) => apiFetch(`/cases/${id}/summary/regenerate`, { method: "POST" }),
 
+  // Inspector
+  getStationPendingApprovalCases: () => apiFetch('/cases/station/pending-approval'),
+  approveCase: (id) => apiFetch(`/cases/${id}/approve`, { method: 'POST' }),
+  broadcastUrgentAlert: (id, reason) => apiFetch(`/cases/${id}/broadcast-alert`, { method: 'POST', body: JSON.stringify({ reason }) }),
+
+
   // Profile
   getProfile: () => apiFetch('/profile/me'),
   updateProfile: (data) => apiFetch('/profile/me', { method: 'PATCH', body: JSON.stringify(data) }),
+
+  // District Command
+  getDistrictInspectors: () => apiFetch('/district/inspectors'),
+  orderInvestigation: (id, payload) => apiFetch(`/district/cases/${id}/order-investigation`, { method: 'POST', body: JSON.stringify(payload) }),
+
   uploadPhoto: async (file) => {
     const formData = new FormData();
     formData.append('file', file);

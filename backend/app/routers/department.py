@@ -86,6 +86,7 @@ def flag_case_to_department(
 
 @router.get("/flags", response_model=List[schemas.DepartmentCaseFlagResponse])
 def get_department_flags(
+    department_id: int = None,
     db: Session = Depends(get_db),
     current_employee: Employee = Depends(get_current_employee)
 ):
@@ -93,10 +94,17 @@ def get_department_flags(
     if "department_dashboard" not in perms:
         raise HTTPException(status_code=403, detail="Not authorized to view department flags")
         
-    if not current_employee.DepartmentID:
-        raise HTTPException(status_code=400, detail="Employee not assigned to a department")
-        
-    flags = db.query(DepartmentCaseFlag).filter(DepartmentCaseFlag.ToDepartmentID == current_employee.DepartmentID)\
+    if "state_wide_access" not in perms:
+        if not current_employee.DepartmentID:
+            raise HTTPException(status_code=400, detail="Employee not assigned to a department")
+        if department_id and department_id != current_employee.DepartmentID:
+            raise HTTPException(status_code=403, detail="Cannot access flags for a different department")
+        department_id = current_employee.DepartmentID
+    else:
+        if not department_id:
+            raise HTTPException(status_code=400, detail="Must provide department_id for statewide access")
+            
+    flags = db.query(DepartmentCaseFlag).filter(DepartmentCaseFlag.ToDepartmentID == department_id)\
               .order_by(DepartmentCaseFlag.CreatedAt.desc()).all()
               
     response_list = []
@@ -132,7 +140,7 @@ def update_department_flag_status(
     if not flag:
         raise HTTPException(status_code=404, detail="Flag not found")
         
-    if flag.ToDepartmentID != current_employee.DepartmentID:
+    if "state_wide_access" not in perms and flag.ToDepartmentID != current_employee.DepartmentID:
         raise HTTPException(status_code=403, detail="Flag belongs to a different department")
         
     if status_data.Status not in ["acknowledged", "resolved"]:

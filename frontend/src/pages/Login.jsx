@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { ShieldAlert, KeyRound, User, Loader2, Eye, EyeOff } from 'lucide-react';
+import { KeyRound, User, Loader2, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import AppLogo from '../components/AppLogo';
+import './Login.css';
 
 const Login = () => {
   const [officerLoginId, setOfficerLoginId] = useState('');
@@ -31,32 +33,32 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen login-page-bg flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
-          <div className="h-16 w-16 bg-blue-900/30 rounded-2xl flex items-center justify-center border border-blue-500/30">
-            <ShieldAlert className="h-10 w-10 text-blue-400" />
+        <div className="flex justify-center login-logo-perspective">
+          <div className="h-24 w-24 flex items-center justify-center">
+            <AppLogo className="login-logo-animate" size={96} />
           </div>
         </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-slate-100">
+        <h2 className="mt-6 text-center text-3xl font-extrabold login-title">
           KSP Intelligence
         </h2>
-        <p className="mt-2 text-center text-sm text-slate-400">
+        <p className="mt-2 text-center text-sm login-subtitle">
           Role-Based Access Control Platform
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-slate-900 py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-slate-800">
-          <div className="flex bg-slate-950 p-1 rounded-lg mb-6 border border-slate-800">
+        <div className="bg-sys-surface py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-sys-border">
+          <div className="flex bg-sys-bg p-1 rounded-lg mb-6 border border-sys-border">
             <button
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${!isAdminMode ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
+              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${!isAdminMode ? 'login-active-tab shadow' : 'text-sys-text-muted hover:text-sys-text-main'}`}
               onClick={() => setIsAdminMode(false)}
             >
               Officer Login
             </button>
             <button
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${isAdminMode ? 'bg-rose-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
+              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${isAdminMode ? 'login-active-tab shadow' : 'text-sys-text-muted hover:text-sys-text-main'}`}
               onClick={() => setIsAdminMode(true)}
             >
               Admin Login
@@ -65,12 +67,12 @@ const Login = () => {
           
           <form className="space-y-6" onSubmit={handleLogin}>
             <div>
-              <label htmlFor="loginId" className="block text-sm font-medium text-slate-300">
+              <label htmlFor="loginId" className="block text-sm font-medium text-sys-text-muted">
                 {isAdminMode ? "Admin ID" : "Officer Login ID"}
               </label>
               <div className="mt-1 relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-slate-500" />
+                  <User className="h-5 w-5 text-sys-text-muted" />
                 </div>
                 <input
                   id="loginId"
@@ -80,19 +82,19 @@ const Login = () => {
                   autoComplete="username"
                   value={isAdminMode ? adminLoginId : officerLoginId}
                   onChange={(e) => isAdminMode ? setAdminLoginId(e.target.value) : setOfficerLoginId(e.target.value)}
-                  className="bg-slate-950 block w-full pl-10 sm:text-sm border-slate-700 rounded-md text-slate-200 focus:ring-blue-500 focus:border-blue-500 py-3 border"
+                  className="bg-sys-bg block w-full pl-10 sm:text-sm border-sys-border-strong rounded-md text-sys-text-main focus:ring-blue-500 focus:border-sys-primary py-3 border"
                   placeholder={isAdminMode ? "Admin ID" : "Officer Login ID"}
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-300">
+              <label htmlFor="password" className="block text-sm font-medium text-sys-text-muted">
                 Password
               </label>
               <div className="mt-1 relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <KeyRound className="h-5 w-5 text-slate-500" />
+                  <KeyRound className="h-5 w-5 text-sys-text-muted" />
                 </div>
                 <input
                   id="password"
@@ -102,13 +104,13 @@ const Login = () => {
                   required
                   value={isAdminMode ? adminPassword : officerPassword}
                   onChange={(e) => isAdminMode ? setAdminPassword(e.target.value) : setOfficerPassword(e.target.value)}
-                  className="bg-slate-950 block w-full pl-10 pr-10 sm:text-sm border-slate-700 rounded-md text-slate-200 focus:ring-blue-500 focus:border-blue-500 py-3 border"
+                  className="bg-sys-bg block w-full pl-10 pr-10 sm:text-sm border-sys-border-strong rounded-md text-sys-text-main focus:ring-blue-500 focus:border-sys-primary py-3 border"
                   placeholder="Password"
                 />
                 <button
                   type="button"
                   onClick={() => isAdminMode ? setAdminShowPassword(!adminShowPassword) : setOfficerShowPassword(!officerShowPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300 focus:outline-none"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-sys-text-muted hover:text-sys-text-muted focus:outline-none"
                 >
                   {(isAdminMode ? adminShowPassword : officerShowPassword) ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
@@ -125,7 +127,7 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={isLoggingIn}
-                className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${isAdminMode ? 'bg-rose-600 hover:bg-rose-700 focus:ring-rose-500' : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'} focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors`}
+                className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-sys-text-inverse login-submit-btn focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors`}
               >
                 {isLoggingIn ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Sign In'}
               </button>

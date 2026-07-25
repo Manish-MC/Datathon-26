@@ -14,7 +14,10 @@ from fastapi import Query
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
 @router.get("/hotspots", response_model=List[schemas.HotspotCell])
-def get_hotspots(db: Session = Depends(get_db)):
+def get_hotspots(
+    db: Session = Depends(get_db),
+    current_employee: Employee = Depends(get_current_employee)
+):
     # Group cases by 0.01 degree rounded grid cells
     # SQLite supports round(value, decimal_places)
     
@@ -23,7 +26,17 @@ def get_hotspots(db: Session = Depends(get_db)):
             func.round(CaseMaster.latitude, 2).label("lat_bucket"),
             func.round(CaseMaster.longitude, 2).label("lon_bucket"),
             func.count(CaseMaster.CaseMasterID).label("case_count")
-        ).group_by(
+        )
+        
+        perms = get_permissions_for_rank(current_employee.rank.RankName)
+        if "state_wide_access" not in perms:
+            if current_employee.UnitID and "monitor_stations" not in perms:
+                query = query.filter(CaseMaster.PoliceStationID == current_employee.UnitID)
+            elif current_employee.DistrictID:
+                unit_ids = [u.UnitID for u in db.query(Unit).filter(Unit.DistrictID == current_employee.DistrictID).all()]
+                query = query.filter(CaseMaster.PoliceStationID.in_(unit_ids))
+                
+        results = query.group_by(
             "lat_bucket", "lon_bucket"
         ).all()
         
@@ -34,7 +47,7 @@ def get_hotspots(db: Session = Depends(get_db)):
                 longitude=float(row.lon_bucket), 
                 case_count=int(row.case_count)
             ) 
-            for row in query if row.lat_bucket is not None and row.lon_bucket is not None
+            for row in results if row.lat_bucket is not None and row.lon_bucket is not None
         ]
         
         return hotspots
@@ -339,7 +352,7 @@ def get_department_kpis(
     if "department_dashboard" not in perms:
         raise HTTPException(status_code=403, detail="Not authorized to view department dashboard")
         
-    if current_employee.DepartmentID != department_id:
+    if "state_wide_access" not in perms and current_employee.DepartmentID != department_id:
         raise HTTPException(status_code=403, detail="Cannot access KPIs for a different department")
         
     ninety_days_ago = datetime.now() - timedelta(days=90)

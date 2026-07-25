@@ -55,7 +55,7 @@ export default function Alerts() {
   };
 
   if (loading && alerts.length === 0) {
-    return <div className="p-8 text-slate-400 flex items-center space-x-2"><Loader2 className="w-5 h-5 animate-spin" /><span>Loading alerts...</span></div>;
+    return <div className="p-8 text-sys-text-muted flex items-center space-x-2"><Loader2 className="w-5 h-5 animate-spin" /><span>Loading alerts...</span></div>;
   }
 
   const openAlerts = alerts.filter(a => a.Status === 'open');
@@ -65,11 +65,11 @@ export default function Alerts() {
     <div className="flex-1 overflow-y-auto p-8">
       <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-slate-100 mb-2 flex items-center space-x-3">
+          <h1 className="text-3xl font-bold text-sys-text-main mb-2 flex items-center space-x-3">
             <AlertTriangle className="w-8 h-8 text-amber-500" />
             <span>Decision Support Alerts</span>
           </h1>
-          <p className="text-slate-400">AI-driven actionable insights requiring human review.</p>
+          <p className="text-sys-text-muted">AI-driven actionable insights requiring human review.</p>
           <div className="mt-3 inline-flex items-center space-x-2 text-amber-500/80 bg-amber-500/5 px-3 py-1.5 rounded border border-amber-500/10">
             <AlertTriangle className="w-3.5 h-3.5" />
             <span className="text-[10px] font-semibold uppercase tracking-wider">AI-generated decision-support only, human review required</span>
@@ -79,7 +79,7 @@ export default function Alerts() {
         <button 
           onClick={handleRefreshAlerts}
           disabled={refreshing}
-          className="bg-[#0f172a] hover:bg-slate-800 border border-slate-700 text-slate-200 text-sm font-medium py-2 px-4 rounded-lg flex items-center space-x-2 transition-colors disabled:opacity-50 shrink-0"
+          className="bg-sys-surface hover:bg-sys-surface-hover border border-sys-border-strong text-sys-text-main text-sm font-medium py-2 px-4 rounded-lg flex items-center space-x-2 transition-colors disabled:opacity-50 shrink-0"
         >
           <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
           <span>{refreshing ? 'Analyzing Data...' : 'Run Analytics Engine'}</span>
@@ -95,15 +95,15 @@ export default function Alerts() {
       <div className="space-y-8">
         {/* Open Alerts Section */}
         <section>
-          <h2 className="text-lg font-bold text-slate-200 mb-4 flex items-center space-x-2">
+          <h2 className="text-lg font-bold text-sys-text-main mb-4 flex items-center space-x-2">
             <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
             <span>Needs Review ({openAlerts.length})</span>
           </h2>
           
           {openAlerts.length === 0 ? (
-            <div className="bg-[#0c1222] border border-slate-800 rounded-xl p-8 text-center">
+            <div className="bg-sys-surface border border-sys-border rounded-xl p-8 text-center">
               <Check className="w-12 h-12 text-emerald-500/50 mx-auto mb-3" />
-              <p className="text-slate-400">No open alerts. You're all caught up!</p>
+              <p className="text-sys-text-muted">No open alerts. You're all caught up!</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4">
@@ -115,7 +115,7 @@ export default function Alerts() {
         {/* Reviewed/Dismissed Section */}
         {pastAlerts.length > 0 && (
           <section>
-            <h2 className="text-lg font-bold text-slate-500 mb-4 flex items-center space-x-2">
+            <h2 className="text-lg font-bold text-sys-text-muted mb-4 flex items-center space-x-2">
               <Check className="w-4 h-4" />
               <span>Resolved ({pastAlerts.length})</span>
             </h2>
@@ -138,36 +138,36 @@ function AlertCard({ alert, onAction, navigate, hasPermission }) {
   const isCluster = alert.AlertType === 'similar_cluster';
   
   return (
-    <div className={`bg-[#0c1222] border ${alert.Status === 'open' ? (isCluster ? 'border-indigo-500/50' : 'border-rose-500/50') : 'border-slate-800'} rounded-xl p-5 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6 group transition-colors`}>
+    <div className={`bg-sys-surface border ${alert.Status === 'open' ? (isCluster ? 'border-indigo-500/50' : 'border-rose-500/50') : 'border-sys-border'} rounded-xl p-5 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6 group transition-colors`}>
       <div className={`absolute top-0 left-0 w-1 h-full ${alert.Status === 'open' ? (isCluster ? 'bg-indigo-500' : 'bg-rose-500') : 'bg-slate-600'}`}></div>
       
       <div className="flex-1">
         <div className="flex items-center space-x-3 mb-2">
           {isCluster ? (
-            <span className={`flex items-center space-x-1.5 px-2.5 py-1 rounded text-xs font-bold ${alert.Status === 'open' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-slate-800 text-slate-400'}`}>
+            <span className={`flex items-center space-x-1.5 px-2.5 py-1 rounded text-xs font-bold ${alert.Status === 'open' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-sys-surface-hover text-sys-text-muted'}`}>
               <Sparkles className="w-3.5 h-3.5" />
               <span>SIMILARITY CLUSTER</span>
             </span>
           ) : (
-            <span className={`flex items-center space-x-1.5 px-2.5 py-1 rounded text-xs font-bold ${alert.Status === 'open' ? 'bg-rose-500/20 text-rose-400' : 'bg-slate-800 text-slate-400'}`}>
+            <span className={`flex items-center space-x-1.5 px-2.5 py-1 rounded text-xs font-bold ${alert.Status === 'open' ? 'bg-rose-500/20 text-rose-400' : 'bg-sys-surface-hover text-sys-text-muted'}`}>
               <MapPin className="w-3.5 h-3.5" />
               <span>HOTSPOT SPIKE</span>
             </span>
           )}
-          <span className="text-xs text-slate-500">{new Date(alert.CreatedAt).toLocaleString()}</span>
+          <span className="text-xs text-sys-text-muted">{new Date(alert.CreatedAt).toLocaleString()}</span>
         </div>
         
-        <p className={`text-base font-medium mb-4 ${alert.Status === 'open' ? 'text-slate-200' : 'text-slate-400'}`}>
+        <p className={`text-base font-medium mb-4 ${alert.Status === 'open' ? 'text-sys-text-main' : 'text-sys-text-muted'}`}>
           {alert.Reason}
         </p>
 
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-slate-500 mr-2">Linked Cases:</span>
+          <span className="text-xs text-sys-text-muted mr-2">Linked Cases:</span>
           {relatedIds.map(id => (
             <button 
               key={id}
               onClick={() => navigate(`/case/${id}`)}
-              className="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded text-xs transition-colors flex items-center space-x-1"
+              className="bg-blue-600/10 hover:bg-blue-600/20 text-sys-primary border border-sys-primary/20 px-2 py-0.5 rounded text-xs transition-colors flex items-center space-x-1"
             >
               <Link2 className="w-3 h-3" />
               <span>ID: {id}</span>
@@ -176,7 +176,7 @@ function AlertCard({ alert, onAction, navigate, hasPermission }) {
         </div>
       </div>
       
-      <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center gap-4 border-t md:border-t-0 md:border-l border-slate-800 pt-4 md:pt-0 md:pl-6 shrink-0 min-w-[200px]">
+      <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center gap-4 border-t md:border-t-0 md:border-l border-sys-border pt-4 md:pt-0 md:pl-6 shrink-0 min-w-[200px]">
         {alert.Status === 'open' ? (
           <>
             {hasPermission("approve_alert_action") && (
@@ -191,7 +191,7 @@ function AlertCard({ alert, onAction, navigate, hasPermission }) {
             {hasPermission("dismiss_alert") && (
               <button 
                 onClick={() => onAction(alert.AlertID, 'dismissed')}
-                className="w-full bg-slate-800 hover:bg-slate-700 text-slate-400 font-medium py-2 px-4 rounded transition-colors flex items-center justify-center space-x-2"
+                className="w-full bg-sys-surface-hover hover:bg-slate-700 text-sys-text-muted font-medium py-2 px-4 rounded transition-colors flex items-center justify-center space-x-2"
               >
                 <X className="w-4 h-4" />
                 <span>Dismiss</span>
@@ -200,11 +200,11 @@ function AlertCard({ alert, onAction, navigate, hasPermission }) {
           </>
         ) : (
           <div className="text-right w-full">
-            <div className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">Status</div>
-            <div className={`font-bold ${alert.Status === 'reviewed' ? 'text-emerald-500' : 'text-slate-500'}`}>
+            <div className="text-xs text-sys-text-muted uppercase tracking-wider font-semibold mb-1">Status</div>
+            <div className={`font-bold ${alert.Status === 'reviewed' ? 'text-emerald-500' : 'text-sys-text-muted'}`}>
               {alert.Status.toUpperCase()}
             </div>
-            <div className="text-xs text-slate-500 mt-2">By: {alert.ReviewedBy}</div>
+            <div className="text-xs text-sys-text-muted mt-2">By: {alert.ReviewedBy}</div>
           </div>
         )}
       </div>
