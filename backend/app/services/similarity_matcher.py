@@ -1,7 +1,7 @@
 import math
 from datetime import datetime
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+from collections import Counter
+import re
 from sqlalchemy.orm import Session
 from app.models.schema import CaseMaster
 
@@ -21,6 +21,50 @@ def haversine(lat1, lon1, lat2, lon2):
     distance = R * c
     return distance
 
+def compute_tfidf_cosine_sim(texts, target_index):
+    # Pure Python TF-IDF and Cosine Similarity
+    if not texts or len(texts) == 0:
+        return []
+    
+    # Simple tokenization
+    def tokenize(text):
+        if not text: return []
+        words = re.findall(r'\b\w+\b', text.lower())
+        # simple stopword removal
+        stop_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'}
+        return [w for w in words if w not in stop_words]
+        
+    tokenized_texts = [tokenize(t) for t in texts]
+    N = len(texts)
+    
+    # Document frequencies
+    df = Counter()
+    for tokens in tokenized_texts:
+        df.update(set(tokens))
+        
+    # IDF
+    idf = {word: math.log(N / (count + 1)) + 1 for word, count in df.items()}
+    
+    # TF-IDF vectors
+    vectors = []
+    for tokens in tokenized_texts:
+        tf = Counter(tokens)
+        vec = {word: count * idf[word] for word, count in tf.items()}
+        # Normalize
+        norm = math.sqrt(sum(v*v for v in vec.values()))
+        if norm > 0:
+            vec = {word: v/norm for word, v in vec.items()}
+        vectors.append(vec)
+        
+    # Cosine similarity with target
+    target_vec = vectors[target_index]
+    sims = []
+    for vec in vectors:
+        sim = sum(target_vec.get(w, 0) * v for w, v in vec.items())
+        sims.append(sim)
+        
+    return sims
+
 def find_similar_cases(case_id: int, db: Session, limit: int = 5) -> list[dict]:
     all_cases = db.query(CaseMaster).all()
     target_case = next((c for c in all_cases if c.CaseMasterID == case_id), None)
@@ -28,17 +72,11 @@ def find_similar_cases(case_id: int, db: Session, limit: int = 5) -> list[dict]:
     if not target_case:
         return []
 
-    # 1. Text Similarity (TF-IDF + Cosine)
+    # 1. Text Similarity (Pure Python TF-IDF + Cosine)
     texts = [c.BriefFacts if c.BriefFacts else "" for c in all_cases]
-    vectorizer = TfidfVectorizer(stop_words='english')
+    target_index = all_cases.index(target_case)
     
-    try:
-        tfidf_matrix = vectorizer.fit_transform(texts)
-        target_index = all_cases.index(target_case)
-        cosine_sim = cosine_similarity(tfidf_matrix[target_index:target_index+1], tfidf_matrix)[0]
-    except ValueError:
-        # If texts are empty or vectorizer fails
-        cosine_sim = [0.0] * len(all_cases)
+    cosine_sim = compute_tfidf_cosine_sim(texts, target_index)
 
     matches = []
     
