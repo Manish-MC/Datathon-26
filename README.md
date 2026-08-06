@@ -128,6 +128,109 @@ To reset all demo data and credentials to their original seeded state at any tim
 | Email | smtplib + Gmail SMTP (OTP delivery) |
 | Data loading | pandas (seed_db.py) |
 
+
+
+## System Architecture
+
+```text
+                                        ┌─────────────────────────────┐
+                                        │        End Users            │
+                                        │ Police Officers / Admins    │
+                                        └──────────────┬──────────────┘
+                                                       │
+                                                       ▼
+                                        ┌─────────────────────────────┐
+                                        │      React Frontend         │
+                                        │         (Vite)              │
+                                        └──────────────┬──────────────┘
+                                                       │
+                                        REST API (JWT Authentication)
+                                                       │
+                                                       ▼
+                                  ┌────────────────────────────────────────┐
+                                  │          FastAPI Backend               │
+                                  │ Authentication & Authorization         │
+                                  │ Rank-Based Access Control              │
+                                  │ Case Management                        │
+                                  │ Investigation Workflow                 │
+                                  │ Notification Service                   │
+                                  │ Analytics APIs                         │
+                                  │ AI Intelligence Services               │
+                                  └──────────────┬─────────────────────────┘
+                                                 │
+                           ┌─────────────────────┼─────────────────────┐
+                           │                     │                     │
+                           ▼                     ▼                     ▼
+                ┌────────────────┐    ┌────────────────┐    ┌──────────────────┐
+                │ SQLite Database│    │ AI Engine      │    │ Email Service    │
+                │ FIR Records    │    │ TF-IDF         │    │ Gmail SMTP (OTP) │
+                │ Officers       │    │ Similarity     │    └──────────────────┘
+                │ Evidence       │    │ Alert Engine   │
+                │ Investigations │    │ Hotspot Engine │
+                └────────────────┘    └────────────────┘
+```
+
+### Architecture Overview
+
+The platform follows a modular three-layer architecture:
+
+- **Presentation Layer** – React (Vite) frontend providing role-specific dashboards and interactive analytics.
+- **Application Layer** – FastAPI backend handling authentication, authorization, business logic, AI services, investigations, and analytics.
+- **Data Layer** – SQLite database storing FIRs, complaints, officers, evidence, investigations, alerts, and notifications.
+
+The AI services operate completely offline using deterministic algorithms, ensuring explainability and eliminating dependency on external LLM APIs.
+
+## Application Workflow
+
+```text
+Officer Login
+      │
+      ▼
+JWT Authentication
+      │
+      ▼
+Rank-Based Access Validation
+      │
+      ▼
+Dashboard Selection
+      │
+      ▼
+Officer Performs Action
+      │
+      ├──────────────► File FIR
+      ├──────────────► Upload Evidence
+      ├──────────────► Create Investigation
+      ├──────────────► View Analytics
+      └──────────────► Review Alerts
+                     │
+                     ▼
+             FastAPI Processing
+                     │
+     ┌───────────────┼────────────────┐
+     │               │                │
+     ▼               ▼                ▼
+Similarity      AI Summarizer    Alert Engine
+Matching         (TF-IDF)         Hotspot Detection
+     │               │                │
+     └───────────────┼────────────────┘
+                     ▼
+            Database Update
+                     ▼
+         Notifications Generated
+                     ▼
+       Updated Dashboard Response
+```
+
+### Workflow Description
+
+1. Users authenticate using secure JWT-based login.
+2. The backend validates the officer's police rank and dynamically assigns capabilities through the RBAC engine.
+3. Every action is routed through FastAPI APIs.
+4. AI services generate summaries, perform similarity matching, detect hotspots, and create explainable alerts.
+5. Results are stored in the database and notifications are generated where required.
+6. Updated dashboards are returned to the frontend.
+
+
 ## Algorithms Used
 
 No trained ML models or LLM APIs are used anywhere in this platform — every AI feature is built on classical, deterministic algorithms specifically to stay fully offline (zero network-dependency risk) and fully explainable (no black-box output).
@@ -205,6 +308,26 @@ DEMO_MODE=false
 
 - **DySP / ACP** does not yet have a dedicated feature set — the only rank in the original hierarchy not yet fully built out.
 - Email OTP delivery depends on correct Gmail App Password configuration in `.env` — if OTPs aren't arriving, verify `DEMO_MODE=false` and that the App Password is valid.
+
+
+
+## Deployment Architecture
+
+```text
+                   GitHub Repository
+                          │
+                Automatic CI/CD Deploy
+                          │
+        ┌─────────────────┴──────────────────┐
+        ▼                                    ▼
+   Vercel Hosting                     Railway / Render
+  React + Vite UI                    FastAPI Backend
+        │                                    │
+        └──────────── REST API ──────────────┘
+                         │
+                         ▼
+                   SQLite Database
+```
 
 ## Future Scope
 
