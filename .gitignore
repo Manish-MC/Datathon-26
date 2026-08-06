@@ -1,0 +1,7 @@
+scratch/
+scratch_*
+test_*
+tree_output.txt
+backend/scratch_*
+backend/test_*
+frontend/test-results/

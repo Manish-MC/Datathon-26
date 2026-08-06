@@ -6,7 +6,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from fastapi.staticfiles import StaticFiles
-
 from app.db import engine, Base, get_db, SessionLocal
 from app.models.schema import (
     Unit, CaseCategory, CaseStatusMaster, CaseMaster,
